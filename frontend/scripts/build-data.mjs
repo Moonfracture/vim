@@ -131,6 +131,40 @@ const CAPITAL = {
 };
 const cityFor = (name, country) => CITY[name] || CAPITAL[country] || country;
 
+// ---- official websites for the well-known (enriched) universities ----
+// Curated by hand; the ~750 THE-ranked schools have no reliable URL source, so the
+// UI falls back to a web-search link for any university without an entry here.
+const SITE = {
+  'MIT': 'https://www.mit.edu', 'Imperial College London': 'https://www.imperial.ac.uk',
+  'Stanford University': 'https://www.stanford.edu', 'University of Oxford': 'https://www.ox.ac.uk',
+  'Harvard University': 'https://www.harvard.edu', 'University of Cambridge': 'https://www.cam.ac.uk',
+  'ETH Zurich': 'https://ethz.ch', 'NUS Singapore': 'https://www.nus.edu.sg', 'UCL': 'https://www.ucl.ac.uk',
+  'Caltech': 'https://www.caltech.edu', 'Univ of Chicago': 'https://www.uchicago.edu',
+  'Princeton University': 'https://www.princeton.edu', 'Univ of Hong Kong': 'https://www.hku.hk',
+  'NTU Singapore': 'https://www.ntu.edu.sg', 'Cornell University': 'https://www.cornell.edu',
+  'Yale University': 'https://www.yale.edu', 'Columbia University': 'https://www.columbia.edu',
+  'Univ of Pennsylvania': 'https://www.upenn.edu', 'Univ of Melbourne': 'https://www.unimelb.edu.au',
+  'Peking University': 'https://english.pku.edu.cn', 'Tsinghua University': 'https://www.tsinghua.edu.cn/en/',
+  'UC Berkeley': 'https://www.berkeley.edu', 'Johns Hopkins University': 'https://www.jhu.edu',
+  'Univ of Sydney': 'https://www.sydney.edu.au', 'Duke University': 'https://www.duke.edu',
+  'Univ of Toronto': 'https://www.utoronto.ca', 'Univ of Michigan': 'https://umich.edu',
+  'Kings College London': 'https://www.kcl.ac.uk', 'Univ of Manchester': 'https://www.manchester.ac.uk',
+  'McGill University': 'https://www.mcgill.ca', 'Seoul National University': 'https://en.snu.ac.kr',
+  'Fudan University': 'https://www.fudan.edu.cn/en/', 'Univ of Tokyo': 'https://www.u-tokyo.ac.jp/en/',
+  'Univ of Edinburgh': 'https://www.ed.ac.uk', 'CUHK Hong Kong': 'https://www.cuhk.edu.hk/english/',
+  'UCLA': 'https://www.ucla.edu', 'UNSW Sydney': 'https://www.unsw.edu.au',
+  'Paris-Saclay University': 'https://www.universite-paris-saclay.fr/en', 'LSE': 'https://www.lse.ac.uk',
+  'Kyoto University': 'https://www.kyoto-u.ac.jp/en', 'Univ of Amsterdam': 'https://www.uva.nl/en',
+  'KAIST': 'https://www.kaist.ac.kr/en/', 'Australian National Univ': 'https://www.anu.edu.au',
+  'Carnegie Mellon University': 'https://www.cmu.edu', 'NYU': 'https://www.nyu.edu',
+  'Monash University': 'https://www.monash.edu', 'Delft Univ of Technology': 'https://www.tudelft.nl/en/',
+  'Univ of British Columbia': 'https://www.ubc.ca', 'Technical Univ of Munich': 'https://www.tum.de/en/',
+  'LMU Munich': 'https://www.lmu.de/en/', 'Univ of Sao Paulo': 'https://www5.usp.br/english/',
+  'Univ of Cape Town': 'https://www.uct.ac.za', 'IIT Bombay': 'https://www.iitb.ac.in',
+  'KFUPM Saudi Arabia': 'https://www.kfupm.edu.sa', 'Politecnico di Milano': 'https://www.polimi.it/en/',
+  'Univ of Warsaw': 'https://en.uw.edu.pl', 'Sunway University': 'https://university.sunway.edu.my',
+};
+
 // ---- mock field tags per university (rankings dataset has no subject breakdown) ----
 const FIELDS = [
   'Компютърни науки', 'Инженерство', 'Медицина', 'Бизнес и икономика', 'Право',
@@ -210,6 +244,7 @@ const enriched = rankRows.map(r => {
     region: regionOf(country),
     city: cityFor(name, country),
     type: r['university_type'] || null,
+    website: SITE[name] || null,
     qsRank, theRank, bestRank,
     qsScore: num(r['qs_score']),
     employerRep: num(r['qs_employer_rep']),
@@ -422,6 +457,29 @@ const BG_META = {
   'Prof Dr Assen Zlatarov University': { nameBg: 'Университет „Проф. д-р Асен Златаров“', city: 'Бургас', founded: 1963, fields: ['Инженерство', 'Природни науки', 'Медицина'], balo: 'Матура/изпит по математика, химия или биология + оценки от диплома', tMinBGN: 650, tMaxBGN: 1200 },
 };
 
+// official websites for the Bulgarian universities (curated, real domains)
+const BG_SITE = {
+  'Sofia University': 'https://www.uni-sofia.bg',
+  'Medical University of Varna Prof Dr Paraskev Stoyano': 'https://mu-varna.bg',
+  'Medical University of Sofia *': 'https://mu-sofia.bg',
+  'Medical University - Plovdiv': 'https://mu-plovdiv.bg',
+  'University of Plovdiv Paisii Hilendarski': 'https://uni-plovdiv.bg',
+  'University of Food Technologies, Plovdiv': 'https://uft-plovdiv.bg',
+  'University of Rousse': 'https://www.uni-ruse.bg',
+  'University of Chemical Technology and Metallurgy': 'https://uctm.edu',
+  'University of Forestry Sofia': 'https://ltu.bg',
+  'University of National and World Economy': 'https://www.unwe.bg',
+  'New Bulgarian University': 'https://www.nbu.bg',
+  'Technical University of Sofia': 'https://www.tu-sofia.bg',
+  'Trakia University': 'https://uni-sz.bg',
+  'South West University Neofit Rilski': 'https://www.swu.bg',
+  'University of Architecture, Civil Engineering and Geodesy': 'https://uacg.bg',
+  'Agricultural University of Plovdiv': 'https://www.au-plovdiv.bg',
+  'Technical University of Varna': 'https://www.tu-varna.bg',
+  'Technical University of Gabrovo': 'https://www.tugab.bg',
+  'Prof Dr Assen Zlatarov University': 'https://www.btu.bg',
+};
+
 const bgRows = table(SRC.bg, ';');
 const bgUnis = bgRows.map(r => {
   const name = r['Institution'];
@@ -439,6 +497,7 @@ const bgUnis = bgRows.map(r => {
     founded: m.founded || null,
     fields: m.fields || [],
     balo: m.balo || null,
+    website: BG_SITE[name] || null,
     globalRank: num(r['Global Rank']),
     nationalRank: num(r['Rank']),
     quartile: num(r['Best Country Quartile']),

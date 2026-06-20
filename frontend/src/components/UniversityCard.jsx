@@ -5,6 +5,11 @@ import { CRITERIA_BY_ID } from '../lib/scoring.js';
 import { schemeForField } from '../lib/baloobrazuvane.js';
 import { fmtMoney, fmtRange } from '../lib/currency.js';
 
+// Official site if known, else a web search for it — every card stays clickable.
+const websiteHref = (d) =>
+  d.website ||
+  `https://www.google.com/search?q=${encodeURIComponent(`${d.name} ${d.country || ''} official website`)}`;
+
 // One result card. `center` styles the Bulgaria home card differently.
 export default function UniversityCard({ data, order, field, center = false, delay = 0 }) {
   const isCountry = !!data.topUniversities; // bulgaria card shape
@@ -65,6 +70,14 @@ function UniBody({ data, topCriteria, field }) {
   return (
     <div className="mt-4 flex flex-1 flex-col">
       <div className="mb-3 flex flex-wrap gap-1.5">
+        <a
+          href={websiteHref(data)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="chip py-0.5 text-[11px] hover:border-accent/40 hover:text-white"
+        >
+          <Icon.globe size={12} /> {data.website ? 'Сайт' : 'Търси сайт'}
+        </a>
         {data.bestRank && <span className="chip py-0.5 text-[11px]"><Icon.trophy size={12} /> #{data.bestRank} свят</span>}
         {data.nationalRank && <span className="chip py-0.5 text-[11px]"><Icon.trophy size={12} /> #{data.nationalRank} в България</span>}
         {data.type && <span className="chip py-0.5 text-[11px]">{data.type === 'Public' ? 'Държавен' : 'Частен'}</span>}

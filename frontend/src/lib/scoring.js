@@ -89,7 +89,7 @@ export function rankBulgarian(bulgaria, { field, orderedIds, top = 1 }) {
   };
   let pool = (bulgaria.topUniversities || []).map(u => ({
     ...base,
-    name: u.nameBg || u.name, city: u.city, founded: u.founded,
+    name: u.nameBg || u.name, city: u.city, founded: u.founded, website: u.website,
     fields: u.fields, nationalRank: u.nationalRank, balo: u.balo,
     qsScore: Math.max(40, 92 - (u.nationalRank - 1) * 3), // national-standing prestige proxy
     // real per-uni tuition (USD canonical; display localizes to лв). overrides the baseline.
