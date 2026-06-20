@@ -1,6 +1,6 @@
 // University Comparison Assistant — frontend
-// API_BASE starts as the CloudFront proxy path; swapped to the direct Lambda URL after first deploy.
-const API_BASE = '/api';
+// Direct Lambda URL (faster than the CloudFront /api proxy).
+const API_BASE = 'https://v5hzkazwukuwvwhpz6tzsqxe5u0qioxm.lambda-url.eu-central-1.on.aws/';
 
 const $ = sel => document.querySelector(sel);
 const els = {
