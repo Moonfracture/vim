@@ -36,10 +36,17 @@ function getPool() {
       ssl: { rejectUnauthorized: false },
       max: 3,
       idleTimeoutMillis: 30_000,
+      keepAlive: true,
+      connectionTimeoutMillis: 10_000,
     });
+    // Neon scales to zero and reaps idle connections; without this listener the
+    // resulting 'error' event is an uncaught exception → Lambda crash → 502.
+    pool.on('error', (err) => { console.error('pg pool idle client error:', err.message); });
   }
   return pool;
 }
+
+process.on('unhandledRejection', (e) => console.error('unhandledRejection:', e?.message || e));
 const q = (text, params) => getPool().query(text, params);
 
 // Demo accounts that are seeded once and emailed to the user.

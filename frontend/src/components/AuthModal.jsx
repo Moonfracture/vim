@@ -5,7 +5,7 @@ import { ROLES, useAuth } from '../context/AuthContext.jsx';
 
 export default function AuthModal({ open, onClose }) {
   const { login, register } = useAuth();
-  const [mode, setMode] = useState('signup');
+  const [mode, setMode] = useState('login');
   const [role, setRole] = useState('student');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
