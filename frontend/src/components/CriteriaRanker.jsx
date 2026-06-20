@@ -1,26 +1,56 @@
 import { useState } from 'react';
 import { Reorder, useDragControls } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
-import { CRITERIA_BY_ID } from '../lib/scoring.js';
+import { CRITERIA, CRITERIA_BY_ID } from '../lib/scoring.js';
 
-// Drag-and-drop ranking of criteria. Order = priority (top is most important).
+// Pick the criteria you care about, then drag to rank them (top = most important).
 export default function CriteriaRanker({ order, setOrder }) {
+  const unused = CRITERIA.filter((c) => !order.includes(c.id));
+  const remove = (id) => setOrder(order.filter((x) => x !== id));
+  const add = (id) => setOrder([...order, id]);
+
   return (
     <div>
-      <Reorder.Group axis="y" values={order} onReorder={setOrder} className="space-y-2">
-        {order.map((id, i) => (
-          <CriteriaItem key={id} id={id} rank={i + 1} />
-        ))}
-      </Reorder.Group>
+      {order.length > 0 ? (
+        <Reorder.Group axis="y" values={order} onReorder={setOrder} className="space-y-2">
+          {order.map((id, i) => (
+            <CriteriaItem key={id} id={id} rank={i + 1} onRemove={() => remove(id)} />
+          ))}
+        </Reorder.Group>
+      ) : (
+        <div className="rounded-xl border border-dashed border-white/15 px-4 py-5 text-center text-sm text-slate-500">
+          Добави поне един критерий, по който да сравняваме.
+        </div>
+      )}
+
+      {unused.length > 0 && (
+        <div className="mt-3">
+          <p className="mb-2 text-[11px] uppercase tracking-wider text-slate-500">Добави критерий</p>
+          <div className="flex flex-wrap gap-2">
+            {unused.map((c) => (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => add(c.id)}
+                className="chip transition-colors hover:border-accent/40 hover:text-white"
+              >
+                <c.icon size={14} /> {c.label}
+                <span className="ml-0.5 text-accent-soft">+</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <p className="mt-3 text-xs text-slate-500">
         <Icon.drag size={13} className="mb-0.5 mr-1 inline" />
-        Влачи, за да подредиш. Най-горе = най-важно за теб.
+        Влачи, за да подредиш. Най-горе = най-важно. Махни тези, които не те интересуват.
       </p>
     </div>
   );
 }
 
-function CriteriaItem({ id, rank }) {
+function CriteriaItem({ id, rank, onRemove }) {
   const c = CRITERIA_BY_ID[id];
   const controls = useDragControls();
   const [dragging, setDragging] = useState(false);
@@ -42,6 +72,14 @@ function CriteriaItem({ id, rank }) {
       </span>
       <span className="text-slate-400"><c.icon size={18} /></span>
       <span className="flex-1 text-sm font-medium text-slate-200">{c.label}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="text-slate-500 transition-colors hover:text-red-400"
+        aria-label={`Махни ${c.label}`}
+      >
+        <Icon.close size={16} />
+      </button>
       <button
         type="button"
         onPointerDown={(e) => controls.start(e)}

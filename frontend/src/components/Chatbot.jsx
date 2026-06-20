@@ -1,9 +1,11 @@
 import { useRef, useState, useEffect } from 'react';
 import { Icon } from '../lib/icons.jsx';
 import { callApi } from '../lib/api.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 // Chatbot that analyzes the current result cards via Gemini (backend proxy).
 export default function Chatbot({ context }) {
+  const { user } = useAuth();
   const [messages, setMessages] = useState([
     { role: 'assistant', text: 'Здравей! Анализирах резултатите. Питай ме например: „Има ли смисъл да уча в чужбина?“ или „Кой е най-евтиният вариант?“' },
   ]);
@@ -16,6 +18,7 @@ export default function Chatbot({ context }) {
   }, [messages, loading]);
 
   const send = async (text) => {
+    if (!user) return;
     const q = (text ?? input).trim();
     if (!q || loading) return;
     setInput('');
@@ -75,7 +78,7 @@ export default function Chatbot({ context }) {
         )}
       </div>
 
-      {messages.length <= 2 && (
+      {user && messages.length <= 2 && (
         <div className="flex flex-wrap gap-2 px-5 pb-3">
           {prompts.map((p) => (
             <button key={p} onClick={() => send(p)} className="chip hover:border-accent/40 hover:text-white">{p}</button>
@@ -83,18 +86,30 @@ export default function Chatbot({ context }) {
         </div>
       )}
 
-      <div className="flex items-center gap-2 border-t border-white/5 p-3">
-        <input
-          className="input"
-          placeholder="Попитай за резултатите…"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && send()}
-        />
-        <button onClick={() => send()} disabled={loading || !input.trim()} className="btn-primary shrink-0 px-3 py-3 disabled:opacity-40">
-          <Icon.send size={18} />
-        </button>
-      </div>
+      {user ? (
+        <div className="flex items-center gap-2 border-t border-white/5 p-3">
+          <input
+            className="input"
+            placeholder="Попитай за резултатите…"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && send()}
+          />
+          <button onClick={() => send()} disabled={loading || !input.trim()} className="btn-primary shrink-0 px-3 py-3 disabled:opacity-40">
+            <Icon.send size={18} />
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-2 border-t border-white/5 p-4 text-center">
+          <p className="text-sm text-slate-400">Влез в профила си, за да питаш AI асистента.</p>
+          <button
+            onClick={() => window.dispatchEvent(new CustomEvent('unikompas:open-auth'))}
+            className="btn-primary px-5 py-2.5 text-sm"
+          >
+            <Icon.users size={16} /> Вход / Регистрация
+          </button>
+        </div>
+      )}
     </div>
   );
 }

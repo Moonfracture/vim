@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import { Icon } from '../lib/icons.jsx';
 import { ROLES, useAuth } from '../context/AuthContext.jsx';
@@ -14,6 +14,13 @@ const links = [
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
+
+  // let other parts of the app (e.g. the gated chatbot) ask to open the login modal
+  useEffect(() => {
+    const open = () => setAuthOpen(true);
+    window.addEventListener('unikompas:open-auth', open);
+    return () => window.removeEventListener('unikompas:open-auth', open);
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/5 bg-ink-950/70 backdrop-blur-xl">
