@@ -14,8 +14,11 @@ const REGIONS = [
   { value: 'all', label: 'Всички региони' },
   { value: 'Europe', label: 'Европа' },
   { value: 'USA', label: 'САЩ' },
+  { value: 'Asia', label: 'Азия' },
   { value: 'Canada', label: 'Канада' },
   { value: 'Australia', label: 'Австралия' },
+  { value: 'Latin America', label: 'Латинска Америка' },
+  { value: 'Africa', label: 'Африка' },
 ];
 
 // Compact view of a ranked card for the AI assistant context.
