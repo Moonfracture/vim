@@ -104,13 +104,25 @@ function column(m, role) {
   </div>`;
 }
 
+// minimal, safe markdown -> HTML (escape first, then apply a few inline rules)
+function mdToHtml(src) {
+  return esc(src)
+    .replace(/^\s*#{1,6}\s*/gm, '')                 // drop heading markers
+    .replace(/^\s*---\s*$/gm, '<hr>')               // horizontal rules
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/g, '<em>$1</em>')
+    .replace(/\n{2,}/g, '</p><p>')
+    .replace(/\n/g, '<br>');
+}
+
 function verdictTag(rec) {
-  const m = /verdict:\s*(recommended|worth considering|not worth it)/i.exec(rec || '');
-  if (!m) return { html: esc(rec || 'No recommendation available.') };
+  if (!rec) return { html: '<p>No recommendation available.</p>' };
+  const m = /\**verdict:\**\s*\**(recommended|worth considering|not worth it)\**/i.exec(rec);
+  if (!m) return { html: '<p>' + mdToHtml(rec) + '</p>' };
   const verdict = m[1].toLowerCase();
   const cls = verdict === 'recommended' ? 'rec-yes' : verdict === 'not worth it' ? 'rec-no' : 'rec-maybe';
-  const body = rec.slice(0, m.index).trim();
-  return { html: `${esc(body)}<span class="tag ${cls}">Verdict: ${esc(m[1])}</span>` };
+  const body = rec.slice(0, m.index).replace(/[-\s]+$/, '').trim();
+  return { html: '<p>' + mdToHtml(body) + `</p><span class="tag ${cls}">Verdict: ${esc(m[1])}</span>` };
 }
 
 function render(data) {
