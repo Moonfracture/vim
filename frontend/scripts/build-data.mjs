@@ -318,36 +318,120 @@ const theUnis = table(SRC.the)
 
 const universities = [...enriched, ...theUnis];
 
+// ---------------- currencies.json (local-currency display) ----------------
+// Native currency code per country comes straight from the tuition CSV `Currency`
+// column. Display converts USD -> local at build-time-fetched FX; *scoring stays
+// in USD* so cross-country comparison is unaffected.
+const CURRENCY_BY_ISO = { bg: 'BGN', hk: 'HKD' }; // not present in the tuition CSV
+for (const r of tuitionRows) {
+  const code = (r['Currency'] || '').trim();
+  const id = iso2(r['Country']);
+  if (code && id !== 'un') CURRENCY_BY_ISO[id] = code;
+}
+
+// symbol => printed before the amount; suffix => printed after; unknown code => code prefix
+const SYMBOLS = {
+  USD: { symbol: '$' }, EUR: { symbol: '€' }, GBP: { symbol: '£' }, JPY: { symbol: '¥' },
+  CNY: { symbol: '¥' }, INR: { symbol: '₹' }, BRL: { symbol: 'R$' }, RUB: { symbol: '₽' },
+  CAD: { symbol: 'CA$' }, AUD: { symbol: 'A$' }, MXN: { symbol: 'MX$' }, ZAR: { symbol: 'R' },
+  KRW: { symbol: '₩' }, TRY: { symbol: '₺' }, THB: { symbol: '฿' }, IDR: { symbol: 'Rp' },
+  PHP: { symbol: '₱' }, MYR: { symbol: 'RM' }, SGD: { symbol: 'S$' }, NZD: { symbol: 'NZ$' },
+  ILS: { symbol: '₪' }, UAH: { symbol: '₴' }, NGN: { symbol: '₦' }, BDT: { symbol: '৳' },
+  ARS: { symbol: 'AR$' }, CLP: { symbol: 'CLP$' }, COP: { symbol: 'COL$' }, HKD: { symbol: 'HK$' },
+  CHF: { suffix: 'CHF' }, SEK: { suffix: 'kr' }, NOK: { suffix: 'kr' }, DKK: { suffix: 'kr' },
+  PLN: { suffix: 'zł' }, CZK: { suffix: 'Kč' }, HUF: { suffix: 'Ft' }, RON: { suffix: 'lei' },
+  VND: { suffix: '₫' }, PEN: { suffix: 'S/' }, PKR: { suffix: 'Rs' }, BGN: { suffix: 'лв' },
+};
+
+// committed mid-2026 FX (local units per USD) — keeps the build working offline
+const FALLBACK_RATES = {
+  USD: 1, EUR: 0.92, GBP: 0.79, JPY: 155, CNY: 7.2, INR: 84, BRL: 5.4, RUB: 90,
+  CAD: 1.37, AUD: 1.52, MXN: 18, ZAR: 18.5, SAR: 3.75, IDR: 16000, ARS: 950, TRY: 33,
+  KRW: 1350, PKR: 280, BDT: 118, EGP: 48, NGN: 1500, VND: 25000, PHP: 58, THB: 36,
+  IRR: 42000, COP: 4000, MYR: 4.5, UAH: 41, PLN: 3.9, SEK: 10.5, CHF: 0.88, CLP: 950,
+  PEN: 3.75, RON: 4.6, CZK: 23, HUF: 360, SGD: 1.34, NZD: 1.65, NOK: 10.8, DKK: 6.9,
+  ILS: 3.7, BGN: 1.8, HKD: 7.8,
+};
+
+let rates = FALLBACK_RATES, fxSource = 'fallback';
+let fxAsOf = '2026-06';
+try {
+  const res = await fetch('https://open.er-api.com/v6/latest/USD');
+  if (res.ok) {
+    const j = await res.json();
+    if (j?.rates?.EUR) {
+      rates = j.rates;
+      fxSource = 'open.er-api.com';
+      fxAsOf = j.time_last_update_utc
+        ? new Date(j.time_last_update_utc).toISOString().slice(0, 10)
+        : new Date().toISOString().slice(0, 10);
+    }
+  }
+} catch { /* offline — keep committed fallback */ }
+
+const BGN_PER_EUR = 1.95583;       // fixed eurozone peg (exact)
+const HIGH_DENOM_RATE = 50;        // >= 50 local units / USD -> round display to 1000
+const currencies = {};
+const allIsos = new Set([...countries.map(c => c.iso2), 'bg', 'hk', ...universities.map(u => u.iso2)]);
+for (const id of allIsos) {
+  const code = CURRENCY_BY_ISO[id] || 'USD';
+  const rate = rates[code] ?? FALLBACK_RATES[code] ?? 1;
+  const sym = SYMBOLS[code] || {};
+  const entry = {
+    code,
+    symbol: sym.symbol || null,
+    suffix: sym.suffix || null,
+    rate,
+    step: rate >= HIGH_DENOM_RATE ? 1000 : 50,
+  };
+  if (id === 'bg') {
+    entry.secondary = { code: 'EUR', symbol: '€', suffix: null, rate: rate / BGN_PER_EUR };
+  }
+  currencies[id] = entry;
+}
+currencies.meta = { asOf: fxAsOf, source: fxSource };
+const bgnRate = currencies.bg.rate; // BGN per USD, used to convert real BG fees -> canonical USD
+
 // ---------------- bulgaria.json (home / center card) ----------------
 // Curated, real metadata for Bulgarian universities (Scimago gives only rank).
 // City + founding year are stable facts; балообразуване notes are orientational
 // summaries of public admission rules (uni-sofia.bg, mu-sofia.bg, unwe.bg).
+// tMinBGN / tMaxBGN = orientational annual държавна-поръчка (state-subsidized) fee
+// range in лв for 2025/26. Fees vary by specialty within a university; values are
+// approximate, sourced from public fee schedules (uni-sofia.bg, unwe.bg, mu-sofia.bg,
+// tu-sofia.bg) and the regulated PMS caps. New Bulgarian University is private (paid only).
 const BG_META = {
-  'Sofia University': { nameBg: 'СУ „Св. Климент Охридски“', city: 'София', founded: 1888, fields: ['Компютърни науки', 'Право', 'Природни науки', 'Хуманитарни науки', 'Социални науки'], balo: 'Признават се матури; за Информатика (ФМИ) математика с коеф. 2.5 + оценки от диплома' },
-  'Medical University of Varna Prof Dr Paraskev Stoyano': { nameBg: 'Медицински университет – Варна', city: 'Варна', founded: 1961, fields: ['Медицина'], balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42' },
-  'Medical University of Sofia *': { nameBg: 'Медицински университет – София', city: 'София', founded: 1917, fields: ['Медицина'], balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42' },
-  'Medical University - Plovdiv': { nameBg: 'Медицински университет – Пловдив', city: 'Пловдив', founded: 1945, fields: ['Медицина'], balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42' },
-  'University of Plovdiv Paisii Hilendarski': { nameBg: 'ПУ „Паисий Хилендарски“', city: 'Пловдив', founded: 1961, fields: ['Компютърни науки', 'Природни науки', 'Хуманитарни науки', 'Социални науки'], balo: 'Матури и/или кандидатстудентски изпити според специалността' },
-  'University of Food Technologies, Plovdiv': { nameBg: 'Университет по хранителни технологии', city: 'Пловдив', founded: 1953, fields: ['Инженерство', 'Природни науки'], balo: 'Изпит/матура по математика, химия или биология + оценки от диплома' },
-  'University of Rousse': { nameBg: 'Русенски университет „Ангел Кънчев“', city: 'Русе', founded: 1945, fields: ['Инженерство', 'Компютърни науки', 'Бизнес и икономика'], balo: 'Матура/изпит по математика или БЕЛ + оценки от диплома' },
-  'University of Chemical Technology and Metallurgy': { nameBg: 'Химикотехнологичен и металургичен университет', city: 'София', founded: 1953, fields: ['Инженерство', 'Природни науки'], balo: 'Изпит/матура по математика или химия + оценки от диплома' },
-  'University of Forestry Sofia': { nameBg: 'Лесотехнически университет', city: 'София', founded: 1925, fields: ['Природни науки', 'Инженерство'], balo: 'Матура/изпит по биология или математика + оценки от диплома' },
-  'University of National and World Economy': { nameBg: 'УНСС', city: 'София', founded: 1920, fields: ['Бизнес и икономика', 'Право', 'Социални науки'], balo: 'Единен приемен изпит или матура (математика/БЕЛ) + оценки от диплома' },
-  'New Bulgarian University': { nameBg: 'Нов български университет', city: 'София', founded: 1991, fields: ['Бизнес и икономика', 'Социални науки', 'Изкуства и дизайн', 'Хуманитарни науки'], balo: 'По документи и/или тест; матурите се признават' },
-  'Technical University of Sofia': { nameBg: 'Технически университет – София', city: 'София', founded: 1945, fields: ['Инженерство', 'Компютърни науки'], balo: 'Матура/изпит по математика (до 3×) + оценки от диплома' },
-  'Trakia University': { nameBg: 'Тракийски университет', city: 'Стара Загора', founded: 1995, fields: ['Медицина', 'Природни науки', 'Инженерство'], balo: 'Матури/изпити според специалността + оценки от диплома' },
-  'South West University Neofit Rilski': { nameBg: 'ЮЗУ „Неофит Рилски“', city: 'Благоевград', founded: 1976, fields: ['Хуманитарни науки', 'Социални науки', 'Изкуства и дизайн', 'Природни науки'], balo: 'Матури и/или кандидатстудентски изпити според специалността' },
-  'University of Architecture, Civil Engineering and Geodesy': { nameBg: 'УАСГ', city: 'София', founded: 1942, fields: ['Инженерство', 'Изкуства и дизайн'], balo: 'Изпит по математика + изпит по рисуване (за архитектура) + диплома' },
-  'Agricultural University of Plovdiv': { nameBg: 'Аграрен университет – Пловдив', city: 'Пловдив', founded: 1945, fields: ['Природни науки'], balo: 'Матура/изпит по биология или математика + оценки от диплома' },
-  'Technical University of Varna': { nameBg: 'Технически университет – Варна', city: 'Варна', founded: 1962, fields: ['Инженерство', 'Компютърни науки'], balo: 'Матура/изпит по математика + оценки от диплома' },
-  'Technical University of Gabrovo': { nameBg: 'Технически университет – Габрово', city: 'Габрово', founded: 1964, fields: ['Инженерство', 'Компютърни науки'], balo: 'Матура/изпит по математика + оценки от диплома' },
-  'Prof Dr Assen Zlatarov University': { nameBg: 'Университет „Проф. д-р Асен Златаров“', city: 'Бургас', founded: 1963, fields: ['Инженерство', 'Природни науки', 'Медицина'], balo: 'Матура/изпит по математика, химия или биология + оценки от диплома' },
+  'Sofia University': { nameBg: 'СУ „Св. Климент Охридски“', city: 'София', founded: 1888, fields: ['Компютърни науки', 'Право', 'Природни науки', 'Хуманитарни науки', 'Социални науки'], balo: 'Признават се матури; за Информатика (ФМИ) математика с коеф. 2.5 + оценки от диплома', tMinBGN: 530, tMaxBGN: 1200 },
+  'Medical University of Varna Prof Dr Paraskev Stoyano': { nameBg: 'Медицински университет – Варна', city: 'Варна', founded: 1961, fields: ['Медицина'], balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42', tMinBGN: 900, tMaxBGN: 1500 },
+  'Medical University of Sofia *': { nameBg: 'Медицински университет – София', city: 'София', founded: 1917, fields: ['Медицина'], balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42', tMinBGN: 900, tMaxBGN: 1500 },
+  'Medical University - Plovdiv': { nameBg: 'Медицински университет – Пловдив', city: 'Пловдив', founded: 1945, fields: ['Медицина'], balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42', tMinBGN: 900, tMaxBGN: 1500 },
+  'University of Plovdiv Paisii Hilendarski': { nameBg: 'ПУ „Паисий Хилендарски“', city: 'Пловдив', founded: 1961, fields: ['Компютърни науки', 'Природни науки', 'Хуманитарни науки', 'Социални науки'], balo: 'Матури и/или кандидатстудентски изпити според специалността', tMinBGN: 600, tMaxBGN: 1100 },
+  'University of Food Technologies, Plovdiv': { nameBg: 'Университет по хранителни технологии', city: 'Пловдив', founded: 1953, fields: ['Инженерство', 'Природни науки'], balo: 'Изпит/матура по математика, химия или биология + оценки от диплома', tMinBGN: 700, tMaxBGN: 1100 },
+  'University of Rousse': { nameBg: 'Русенски университет „Ангел Кънчев“', city: 'Русе', founded: 1945, fields: ['Инженерство', 'Компютърни науки', 'Бизнес и икономика'], balo: 'Матура/изпит по математика или БЕЛ + оценки от диплома', tMinBGN: 650, tMaxBGN: 1050 },
+  'University of Chemical Technology and Metallurgy': { nameBg: 'Химикотехнологичен и металургичен университет', city: 'София', founded: 1953, fields: ['Инженерство', 'Природни науки'], balo: 'Изпит/матура по математика или химия + оценки от диплома', tMinBGN: 700, tMaxBGN: 1150 },
+  'University of Forestry Sofia': { nameBg: 'Лесотехнически университет', city: 'София', founded: 1925, fields: ['Природни науки', 'Инженерство'], balo: 'Матура/изпит по биология или математика + оценки от диплома', tMinBGN: 700, tMaxBGN: 1100 },
+  'University of National and World Economy': { nameBg: 'УНСС', city: 'София', founded: 1920, fields: ['Бизнес и икономика', 'Право', 'Социални науки'], balo: 'Единен приемен изпит или матура (математика/БЕЛ) + оценки от диплома', tMinBGN: 700, tMaxBGN: 800 },
+  'New Bulgarian University': { nameBg: 'Нов български университет', city: 'София', founded: 1991, fields: ['Бизнес и икономика', 'Социални науки', 'Изкуства и дизайн', 'Хуманитарни науки'], balo: 'По документи и/или тест; матурите се признават', tMinBGN: 3000, tMaxBGN: 5200 },
+  'Technical University of Sofia': { nameBg: 'Технически университет – София', city: 'София', founded: 1945, fields: ['Инженерство', 'Компютърни науки'], balo: 'Матура/изпит по математика (до 3×) + оценки от диплома', tMinBGN: 700, tMaxBGN: 1200 },
+  'Trakia University': { nameBg: 'Тракийски университет', city: 'Стара Загора', founded: 1995, fields: ['Медицина', 'Природни науки', 'Инженерство'], balo: 'Матури/изпити според специалността + оценки от диплома', tMinBGN: 700, tMaxBGN: 1300 },
+  'South West University Neofit Rilski': { nameBg: 'ЮЗУ „Неофит Рилски“', city: 'Благоевград', founded: 1976, fields: ['Хуманитарни науки', 'Социални науки', 'Изкуства и дизайн', 'Природни науки'], balo: 'Матури и/или кандидатстудентски изпити според специалността', tMinBGN: 600, tMaxBGN: 1100 },
+  'University of Architecture, Civil Engineering and Geodesy': { nameBg: 'УАСГ', city: 'София', founded: 1942, fields: ['Инженерство', 'Изкуства и дизайн'], balo: 'Изпит по математика + изпит по рисуване (за архитектура) + диплома', tMinBGN: 700, tMaxBGN: 1200 },
+  'Agricultural University of Plovdiv': { nameBg: 'Аграрен университет – Пловдив', city: 'Пловдив', founded: 1945, fields: ['Природни науки'], balo: 'Матура/изпит по биология или математика + оценки от диплома', tMinBGN: 650, tMaxBGN: 1050 },
+  'Technical University of Varna': { nameBg: 'Технически университет – Варна', city: 'Варна', founded: 1962, fields: ['Инженерство', 'Компютърни науки'], balo: 'Матура/изпит по математика + оценки от диплома', tMinBGN: 700, tMaxBGN: 1150 },
+  'Technical University of Gabrovo': { nameBg: 'Технически университет – Габрово', city: 'Габрово', founded: 1964, fields: ['Инженерство', 'Компютърни науки'], balo: 'Матура/изпит по математика + оценки от диплома', tMinBGN: 650, tMaxBGN: 1050 },
+  'Prof Dr Assen Zlatarov University': { nameBg: 'Университет „Проф. д-р Асен Златаров“', city: 'Бургас', founded: 1963, fields: ['Инженерство', 'Природни науки', 'Медицина'], balo: 'Матура/изпит по математика, химия или биология + оценки от диплома', tMinBGN: 650, tMaxBGN: 1200 },
 };
 
 const bgRows = table(SRC.bg, ';');
 const bgUnis = bgRows.map(r => {
   const name = r['Institution'];
   const m = BG_META[name] || {};
+  // canonical USD derived from the real лв fee via the same rate display reverses
+  const tuitionMin = m.tMinBGN != null ? Math.round(m.tMinBGN / bgnRate) : null;
+  const tuitionMax = m.tMaxBGN != null ? Math.round(m.tMaxBGN / bgnRate) : null;
+  const avgTuition = (tuitionMin != null && tuitionMax != null)
+    ? Math.round((tuitionMin + tuitionMax) / 2)
+    : null;
   return {
     name,
     nameBg: m.nameBg || name,
@@ -358,17 +442,22 @@ const bgUnis = bgRows.map(r => {
     globalRank: num(r['Global Rank']),
     nationalRank: num(r['Rank']),
     quartile: num(r['Best Country Quartile']),
+    tuitionMin, tuitionMax, avgTuition,
   };
 }).filter(u => u.name);
-// Bulgaria is absent from the tuition dataset — craft a sensible home baseline.
+// Bulgaria home baseline: tuition derived from the real per-uni лв ranges above.
+const bgFees = bgUnis.filter(u => u.avgTuition != null);
+const bgAvgTuition = bgFees.length ? Math.round(bgFees.reduce((s, u) => s + u.avgTuition, 0) / bgFees.length) : 1800;
+const bgMinTuition = bgFees.length ? Math.min(...bgFees.map(u => u.tuitionMin)) : 500;
+const bgMaxTuition = bgFees.length ? Math.max(...bgFees.map(u => u.tuitionMax)) : 3000;
 const bulgaria = {
   name: 'България',
   iso2: 'bg',
   region: 'Europe',
   // representative figures for BG public universities (USD); marked as home baseline in UI
-  avgTuition: 3300,
-  minTuition: 900,
-  maxTuition: 8000,
+  avgTuition: bgAvgTuition,
+  minTuition: bgMinTuition,
+  maxTuition: bgMaxTuition,
   costOfLiving: 38,
   monthlyCost: monthlyCostFor('Bulgaria', 'Sofia'),
   scholarshipAvailability: 35,
@@ -399,6 +488,7 @@ const write = (file, obj) => fs.writeFileSync(path.join(OUT, file), JSON.stringi
 write('countries.json', countries);
 write('universities.json', universities);
 write('bulgaria.json', bulgaria);
+write('currencies.json', currencies);
 write('fields.json', { fields: FIELDS, meta: FIELD_META });
 
 console.log('Built data:', {
@@ -407,5 +497,7 @@ console.log('Built data:', {
   enriched: enriched.length,
   fromTHE: theUnis.length,
   bgUniversities: bgUnis.length,
-  bgInTuition: !!countryByName['Bulgaria'],
+  bgTuitionBGN: `${bgMinTuition}-${bgMaxTuition} USD`,
+  fx: `${fxSource} @ ${fxAsOf} (bgnRate ${bgnRate})`,
+  currencies: Object.keys(currencies).length - 1,
 });

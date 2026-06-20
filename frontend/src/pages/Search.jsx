@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
 import { CRITERIA, rankUniversities, rankBulgarian } from '../lib/scoring.js';
+import { currencyCode } from '../lib/currency.js';
 import FieldAutocomplete from '../components/FieldAutocomplete.jsx';
 import SpecialtyAutocomplete from '../components/SpecialtyAutocomplete.jsx';
 import CriteriaRanker from '../components/CriteriaRanker.jsx';
@@ -32,7 +33,10 @@ function buildContext(results, { field, region, order, home }) {
       name: home?.name || bulgaria.name,
       city: home?.city,
       score: home?.score,
-      avgTuition: bulgaria.avgTuition,
+      currency: 'BGN',
+      avgTuition: home?.avgTuition ?? bulgaria.avgTuition,
+      tuitionMin: home?.tuitionMin ?? bulgaria.minTuition,
+      tuitionMax: home?.tuitionMax ?? bulgaria.maxTuition,
       erasmus: bulgaria.erasmus,
       scholarshipAvailability: bulgaria.scholarshipAvailability,
       costOfLiving: bulgaria.costOfLiving,
@@ -44,6 +48,7 @@ function buildContext(results, { field, region, order, home }) {
       city: u.city,
       score: u.score,
       bestRank: u.bestRank,
+      currency: currencyCode(u.iso2),
       avgTuition: u.avgTuition,
       monthlyCost: u.monthlyCost,
       erasmus: u.erasmus,

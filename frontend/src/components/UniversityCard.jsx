@@ -3,9 +3,7 @@ import { Link } from 'react-router-dom';
 import { Icon, Flag } from '../lib/icons.jsx';
 import { CRITERIA_BY_ID } from '../lib/scoring.js';
 import { schemeForField } from '../lib/baloobrazuvane.js';
-
-const fmtUSD = (n) => (n == null ? '—' : '$' + Math.round(n).toLocaleString('en-US'));
-const fmtMonthly = (n) => (n == null ? '—' : '~$' + Math.round(n).toLocaleString('en-US'));
+import { fmtMoney, fmtRange } from '../lib/currency.js';
 
 // One result card. `center` styles the Bulgaria home card differently.
 export default function UniversityCard({ data, order, field, center = false, delay = 0 }) {
@@ -73,8 +71,13 @@ function UniBody({ data, topCriteria, field }) {
         {data.founded && <span className="chip py-0.5 text-[11px]">осн. {data.founded}</span>}
       </div>
       <div className="rounded-xl bg-black/20 px-3">
-        <Metric icon={Icon.coin} label="Такса/год." value={fmtUSD(data.avgTuition)} />
-        <Metric icon={Icon.bag} label="Издръжка" value={fmtMonthly(data.monthlyCost)} hint="/мес" />
+        <Metric
+          icon={Icon.coin}
+          label="Такса/год."
+          value={data.tuitionMin != null ? fmtRange(data.tuitionMin, data.tuitionMax, data.iso2) : fmtMoney(data.avgTuition, data.iso2)}
+          hint={data.tuitionMin != null ? null : 'средно'}
+        />
+        <Metric icon={Icon.bag} label="Издръжка" value={fmtMoney(data.monthlyCost, data.iso2, { monthly: true })} hint="/мес" />
         <Metric icon={Icon.trophy} label="Стойност на диплома" value={`${data.breakdown ? data.breakdown.find(b=>b.id==='degree')?.value ?? '—' : '—'}/100`} />
         <Metric icon={Icon.globe} label="Еразъм" value={`${data.erasmus ?? '—'}/100`} />
         {data.employerRep != null && <Metric icon={Icon.spark} label="Репутация работодатели" value={`${Math.round(data.employerRep)}/100`} />}
@@ -124,8 +127,8 @@ function CountryBody({ data }) {
   return (
     <div className="mt-4 flex flex-1 flex-col">
       <div className="rounded-xl bg-black/20 px-3">
-        <Metric icon={Icon.coin} label="Ср. такса/год." value={fmtUSD(data.avgTuition)} />
-        <Metric icon={Icon.bag} label="Издръжка" value={fmtMonthly(data.monthlyCost)} hint="/мес" />
+        <Metric icon={Icon.coin} label="Ср. такса/год." value={fmtMoney(data.avgTuition, data.iso2)} hint="средно" />
+        <Metric icon={Icon.bag} label="Издръжка" value={fmtMoney(data.monthlyCost, data.iso2, { monthly: true })} hint="/мес" />
         <Metric icon={Icon.spark} label="Стипендии" value={`${data.scholarshipAvailability}%`} />
         <Metric icon={Icon.globe} label="Еразъм" value={`${data.erasmus}/100`} />
       </div>

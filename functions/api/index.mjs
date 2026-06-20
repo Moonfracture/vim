@@ -16,21 +16,28 @@ const json = (data, statusCode = 200) => ({ statusCode, headers, body: JSON.stri
 
 const MODEL = 'gemini-3.1-flash-lite-preview';
 
+// amounts arrive in USD; print them with the country's currency code so the model
+// answers in the right unit (Bulgaria in лв). Conversion to the symbol happens in the UI.
+const money = (v, code) => (v == null ? '—' : `${Math.round(v)} ${code || 'USD'}`);
+
 function buildPrompt(context) {
   if (!context) return 'Няма налични резултати.';
   const home = context.home || {};
   const lines = [];
   lines.push(`Сфера: ${context.field || '—'}${context.region ? `, регион: ${context.region}` : ''}.`);
   if (context.priorities?.length) lines.push(`Приоритети на ученика (по важност): ${context.priorities.join(', ')}.`);
+  const homeTuition = (home.tuitionMin != null && home.tuitionMax != null)
+    ? `${money(home.tuitionMin, home.currency)}–${money(home.tuitionMax, home.currency)}`
+    : money(home.avgTuition, home.currency);
   lines.push(
-    `ДОМ — ${home.name || 'България'}: ср. такса $${home.avgTuition ?? '—'}/год., Еразъм ${home.erasmus ?? '—'}/100, ` +
-    `стипендии ${home.scholarshipAvailability ?? '—'}%, ориентировъчна издръжка ~$${home.monthlyCost ?? '—'}/мес.`
+    `ДОМ — ${home.name || 'България'}: такса ${homeTuition}/год., Еразъм ${home.erasmus ?? '—'}/100, ` +
+    `стипендии ${home.scholarshipAvailability ?? '—'}%, ориентировъчна издръжка ~${money(home.monthlyCost, home.currency)}/мес.`
   );
   (context.universities || []).forEach((u, i) => {
     const b = (u.breakdown || []).map((x) => `${x.label} ${x.value}`).join(', ');
     lines.push(
       `${i + 1}. ${u.name} (${u.city || u.country}) — общ скор ${u.score}/100, ` +
-      `световен ранг #${u.bestRank ?? '—'}, такса $${u.avgTuition ?? '—'}/год., издръжка ~$${u.monthlyCost ?? '—'}/мес., Еразъм ${u.erasmus ?? '—'}/100, ` +
+      `световен ранг #${u.bestRank ?? '—'}, такса ${money(u.avgTuition, u.currency)}/год., издръжка ~${money(u.monthlyCost, u.currency)}/мес., Еразъм ${u.erasmus ?? '—'}/100, ` +
       `репутация работодатели ${u.employerRep ?? '—'}/100${b ? `; критерии: ${b}` : ''}.`
     );
   });
@@ -47,6 +54,8 @@ async function chat({ question, context, history }) {
     `Разглежданите университети са САМО: ${uniNames}. ` +
     'НЕ въвеждай други университети, държави или примери извън тези данни. ' +
     'Сравнявай ги помежду им и спрямо България, с конкретни числа от данните (такса, ранг, Еразъм, скор). ' +
+    'Сумите са в местната валута на всеки университет (кодът ѝ е до числото, напр. BGN за България, EUR, GBP, JPY) — ' +
+    'отговаряй в съответната валута, никога в щатски долари. ' +
     'Отговаряй кратко (до ~120 думи). Ако нещо липсва в данните, кажи го честно вместо да предполагаш.\n\n' +
     'ДАННИ ЗА ТЕКУЩОТО СРАВНЕНИЕ:\n' + buildPrompt(context);
 
