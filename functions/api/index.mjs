@@ -25,7 +25,7 @@ function buildPrompt(context) {
   const home = context.home || {};
   const lines = [];
   lines.push(`Сфера: ${context.field || '—'}${context.region ? `, регион: ${context.region}` : ''}.`);
-  if (context.countries?.length) lines.push(`Избрани държави: ${context.countries.join(', ')}.`);
+  if (context.scope?.names?.length) lines.push(`Избрани ${context.scope.kind || 'локации'}: ${context.scope.names.join(', ')}.`);
   if (context.priorities?.length) lines.push(`Приоритети на ученика (по важност): ${context.priorities.join(', ')}.`);
   const homeTuition = (home.tuitionMin != null && home.tuitionMax != null)
     ? `${money(home.tuitionMin, home.currency)}–${money(home.tuitionMax, home.currency)}`

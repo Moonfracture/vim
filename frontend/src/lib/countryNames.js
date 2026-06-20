@@ -56,3 +56,28 @@ export const COUNTRY_BG = {
 };
 
 export const nameBg = (country) => COUNTRY_BG[country] || country;
+
+// US states (2-letter code → Bulgarian) for the USA region sub-filter.
+export const US_STATE_BG = {
+  MA: 'Масачузетс',
+  CA: 'Калифорния',
+  IL: 'Илинойс',
+  NJ: 'Ню Джърси',
+  NY: 'Ню Йорк',
+  CT: 'Кънектикът',
+  PA: 'Пенсилвания',
+  MD: 'Мериленд',
+  NC: 'Северна Каролина',
+  MI: 'Мичиган',
+  WA: 'Вашингтон',
+  GA: 'Джорджия',
+  TX: 'Тексас',
+  WI: 'Уисконсин',
+  RI: 'Роуд Айлънд',
+  MO: 'Мисури',
+  IN: 'Индиана',
+  MN: 'Минесота',
+  TN: 'Тенеси',
+};
+
+export const stateNameBg = (code) => US_STATE_BG[code] || code;

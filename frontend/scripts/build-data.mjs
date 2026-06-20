@@ -131,6 +131,25 @@ const CAPITAL = {
 };
 const cityFor = (name, country) => CITY[name] || CAPITAL[country] || country;
 
+// ---- curated US state (2-letter) per university; dataset has no usable state ----
+const US_STATE = {
+  'MIT': 'MA', 'Stanford University': 'CA', 'Harvard University': 'MA', 'Caltech': 'CA',
+  'Univ of Chicago': 'IL', 'The University of Chicago': 'IL', 'Princeton University': 'NJ',
+  'Cornell University': 'NY', 'Yale University': 'CT', 'Columbia University': 'NY',
+  'Univ of Pennsylvania': 'PA', 'UC Berkeley': 'CA', 'Johns Hopkins University': 'MD',
+  'Duke University': 'NC', 'Univ of Michigan': 'MI', 'UCLA': 'CA', 'Carnegie Mellon University': 'PA',
+  'NYU': 'NY', 'University of Washington': 'WA', 'Northwestern University': 'IL',
+  'Georgia Institute of Technology': 'GA', 'University of Illinois at Urbana-Champaign': 'IL',
+  'University of California, San Diego': 'CA', 'University of Texas at Austin': 'TX',
+  'University of Wisconsin-Madison': 'WI', 'University of California, Davis': 'CA',
+  'Brown University': 'RI', 'Washington University in St Louis': 'MO',
+  'University of California, Santa Barbara': 'CA', 'University of Southern California': 'CA',
+  'Boston University': 'MA', 'University of North Carolina at Chapel Hill': 'NC',
+  'Purdue University West Lafayette': 'IN', 'University of Minnesota': 'MN',
+  'Vanderbilt University': 'TN', 'University of California, Irvine': 'CA',
+};
+const stateOf = (name, country) => (country === 'USA' ? (US_STATE[name] || null) : null);
+
 // ---- official websites for the well-known (enriched) universities ----
 // Curated by hand; the ~750 THE-ranked schools have no reliable URL source, so the
 // UI falls back to a web-search link for any university without an entry here.
@@ -243,6 +262,7 @@ const enriched = rankRows.map(r => {
     iso2: iso2(country),
     region: regionOf(country),
     city: cityFor(name, country),
+    state: stateOf(name, country),
     type: r['university_type'] || null,
     website: SITE[name] || null,
     qsRank, theRank, bestRank,
@@ -328,6 +348,7 @@ const theUnis = table(SRC.the)
       iso2: iso2(r.country),
       region: regionOf(r.country),
       city: null,
+      state: stateOf(r.name, r.country),
       type: null,
       qsRank: null, theRank: r.rank, bestRank: r.rank,
       qsScore: r.score, // THE overall score (0..100) — prestige proxy for scoring

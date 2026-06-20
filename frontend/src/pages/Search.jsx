@@ -3,34 +3,47 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
 import { CRITERIA, rankUniversities, rankBulgarian } from '../lib/scoring.js';
 import { currencyCode } from '../lib/currency.js';
-import { nameBg } from '../lib/countryNames.js';
+import { nameBg, stateNameBg } from '../lib/countryNames.js';
 import FieldAutocomplete from '../components/FieldAutocomplete.jsx';
 import SpecialtyAutocomplete from '../components/SpecialtyAutocomplete.jsx';
 import CriteriaRanker from '../components/CriteriaRanker.jsx';
-import CountryFilter from '../components/CountryFilter.jsx';
+import RegionSubFilter from '../components/RegionSubFilter.jsx';
 import PentominoResults from '../components/PentominoResults.jsx';
 import Chatbot from '../components/Chatbot.jsx';
 import universities from '../data/universities.json';
 import bulgaria from '../data/bulgaria.json';
 
-// distinct countries in a region, each with its best (lowest) university rank, rank-sorted
-function countriesIn(region) {
+// USA narrows by state; other multi-country regions narrow by country.
+const SUB_BY_STATE = (region) => region === 'USA';
+
+// Distinct sub-options for a region: { key, label, iso2?, bestRank }, rank-sorted.
+// USA → states (no flag); other regions → countries (with flag). Empty for single
+// entities ('all', Canada, …) so no panel shows.
+function optionsIn(region) {
   if (!region || region === 'all') return [];
-  const byIso = new Map();
+  const byState = SUB_BY_STATE(region);
+  const by = new Map();
   for (const u of universities) {
     if (u.region !== region) continue;
-    const cur = byIso.get(u.iso2);
-    if (!cur) byIso.set(u.iso2, { iso2: u.iso2, country: u.country, bestRank: u.bestRank ?? null });
-    else if (u.bestRank != null && (cur.bestRank == null || u.bestRank < cur.bestRank)) cur.bestRank = u.bestRank;
+    const key = byState ? u.state : u.iso2;
+    if (!key) continue; // skip US unis with no curated state
+    const cur = by.get(key);
+    if (!cur) {
+      by.set(key, byState
+        ? { key, label: stateNameBg(key), bestRank: u.bestRank ?? null }
+        : { key, label: nameBg(u.country), iso2: u.iso2, bestRank: u.bestRank ?? null });
+    } else if (u.bestRank != null && (cur.bestRank == null || u.bestRank < cur.bestRank)) {
+      cur.bestRank = u.bestRank;
+    }
   }
-  return [...byIso.values()].sort((a, b) => (a.bestRank ?? 1e9) - (b.bestRank ?? 1e9));
+  return [...by.values()].sort((a, b) => (a.bestRank ?? 1e9) - (b.bestRank ?? 1e9));
 }
 
-// "top destinations": countries with a uni in the global top 150; at least the top 3 by rank
-function autoCountries(list) {
-  const top = list.filter((c) => c.bestRank != null && c.bestRank <= 150).map((c) => c.iso2);
+// "top destinations": options with a uni in the global top 150; at least the top 3 by rank
+function autoSelect(list) {
+  const top = list.filter((o) => o.bestRank != null && o.bestRank <= 150).map((o) => o.key);
   if (top.length >= 3) return top;
-  return list.slice(0, 3).map((c) => c.iso2);
+  return list.slice(0, 3).map((o) => o.key);
 }
 
 const REGIONS = [
@@ -45,12 +58,12 @@ const REGIONS = [
 ];
 
 // Compact view of a ranked card for the AI assistant context.
-function buildContext(results, { field, region, countryNames, order, home }) {
+function buildContext(results, { field, region, scope, order, home }) {
   const top3 = order.slice(0, 3).map((id) => CRITERIA.find((c) => c.id === id)?.label).filter(Boolean);
   return {
     field: field || 'без сфера',
     region: REGIONS.find((r) => r.value === region)?.label,
-    countries: countryNames?.length ? countryNames : null,
+    scope: scope?.names?.length ? scope : null,
     priorities: top3,
     home: {
       name: home?.name || bulgaria.name,
@@ -85,22 +98,25 @@ export default function Search() {
   const [field, setField] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [region, setRegion] = useState('all');
-  const [countries, setCountries] = useState([]);
+  const [picks, setPicks] = useState([]);
   const [order, setOrder] = useState(CRITERIA.map((c) => c.id));
   const [results, setResults] = useState(null);
   const [home, setHome] = useState(null);
 
-  const countriesForRegion = useMemo(() => countriesIn(region), [region]);
-  // when the region changes, reset the country picks to that region's top destinations
+  const byState = SUB_BY_STATE(region);
+  const subOptions = useMemo(() => optionsIn(region), [region]);
+  const subLabel = byState ? 'Щати' : 'Държави';
+  // when the region changes, reset the picks to that region's top destinations
   useEffect(() => {
-    setCountries(autoCountries(countriesForRegion));
-  }, [countriesForRegion]);
+    setPicks(autoSelect(subOptions));
+  }, [subOptions]);
 
   const canCompare = !!field && order.length > 0;
 
   const compare = () => {
     if (!canCompare) return;
-    const ranked = rankUniversities(universities, { field, region, countries, orderedIds: order, top: 4 });
+    const geo = byState ? { states: picks } : { countries: picks };
+    const ranked = rankUniversities(universities, { field, region, ...geo, orderedIds: order, top: 4 });
     setResults(ranked);
     setHome(rankBulgarian(bulgaria, { field, orderedIds: order })[0] || null);
     // scroll to results after they mount
@@ -111,9 +127,10 @@ export default function Search() {
 
   const context = useMemo(() => {
     if (!results) return null;
-    const countryNames = countriesForRegion.filter((c) => countries.includes(c.iso2)).map((c) => nameBg(c.country));
-    return buildContext(results, { field, region, countryNames, order, home });
-  }, [results, field, region, countries, countriesForRegion, order, home]);
+    const names = subOptions.filter((o) => picks.includes(o.key)).map((o) => o.label);
+    const scope = names.length ? { kind: byState ? 'щати' : 'държави', names } : null;
+    return buildContext(results, { field, region, scope, order, home });
+  }, [results, field, region, picks, subOptions, byState, order, home]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
@@ -176,7 +193,7 @@ export default function Search() {
           </div>
 
           <div className="sm:col-span-2">
-            <CountryFilter available={countriesForRegion} selected={countries} onChange={setCountries} />
+            <RegionSubFilter label={subLabel} items={subOptions} selected={picks} onChange={setPicks} />
           </div>
         </div>
 
