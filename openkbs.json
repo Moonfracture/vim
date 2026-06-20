@@ -4,6 +4,7 @@
   "postgres": true,
   "storage": { "cloudfront": "media" },
   "mqtt": false,
+  "email": true,
   "functions": [
     { "name": "api", "runtime": "nodejs24.x", "memory": 512, "timeout": 30 }
   ],
