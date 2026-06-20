@@ -45,10 +45,10 @@ export default function Community() {
   }, [messages.length, active]);
 
   const send = () => {
+    if (!user) return;
     const text = input.trim();
     if (!text) return;
-    const name = user ? `${user.name} (ти)` : 'Ти (гост)';
-    const msg = { from: name, role: 'me', text, t: 'сега' };
+    const msg = { from: `${user.name} (ти)`, role: 'me', text, t: 'сега' };
     setThreads((prev) => ({ ...prev, [active]: [...(prev[active] || []), msg] }));
     setInput('');
   };
@@ -129,18 +129,30 @@ export default function Community() {
             })}
           </div>
 
-          <div className="flex items-center gap-2 border-t border-white/5 p-3">
-            <input
-              className="input"
-              placeholder={user ? 'Напиши съобщение…' : 'Пишеш като гост — влез, за да те разпознаят…'}
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && send()}
-            />
-            <button onClick={send} disabled={!input.trim()} className="btn-primary shrink-0 px-3 py-3 disabled:opacity-40">
-              <Icon.send size={18} />
-            </button>
-          </div>
+          {user ? (
+            <div className="flex items-center gap-2 border-t border-white/5 p-3">
+              <input
+                className="input"
+                placeholder="Напиши съобщение…"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && send()}
+              />
+              <button onClick={send} disabled={!input.trim()} className="btn-primary shrink-0 px-3 py-3 disabled:opacity-40">
+                <Icon.send size={18} />
+              </button>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-2 border-t border-white/5 p-4 text-center">
+              <p className="text-sm text-slate-400">Влез в профила си, за да пишеш в общността.</p>
+              <button
+                onClick={() => window.dispatchEvent(new CustomEvent('unikompas:open-auth'))}
+                className="btn-primary px-5 py-2.5 text-sm"
+              >
+                <Icon.users size={16} /> Вход / Регистрация
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
