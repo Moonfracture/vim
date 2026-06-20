@@ -6,6 +6,7 @@ import Search from './pages/Search.jsx';
 import Community from './pages/Community.jsx';
 import Universities from './pages/Universities.jsx';
 import Calculator from './pages/Calculator.jsx';
+import Profile from './pages/Profile.jsx';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/community" element={<Community />} />
           <Route path="/universities" element={<Universities />} />
           <Route path="/calculator" element={<Calculator />} />
+          <Route path="/profile" element={<Profile />} />
           <Route path="*" element={<Home />} />
         </Routes>
       </main>

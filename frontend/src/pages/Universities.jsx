@@ -1,10 +1,10 @@
-import { useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { callApi } from '../lib/api.js';
 
-// Mock university profiles. Universities can add photos (local preview) and achievements.
-// Specs (founded / fields / balo) mirror the curated BG_META set in scripts/build-data.mjs.
+// Static showcase profiles (curated). Specs mirror the BG_META set in scripts/build-data.mjs.
 const SEED = [
   {
     id: 'su',
@@ -164,15 +164,22 @@ const SEED = [
   },
 ];
 
+const fmtDate = (iso) => {
+  try { return new Date(iso).toLocaleDateString('bg-BG', { day: 'numeric', month: 'short' }); }
+  catch { return ''; }
+};
+
 export default function Universities() {
   const { user } = useAuth();
   const isUni = user?.role === 'university';
-  const [unis, setUnis] = useState(SEED);
+  const isStudent = user?.role === 'student';
+  const [posts, setPosts] = useState([]);
 
-  const addAchievement = (id, text) =>
-    setUnis((prev) => prev.map((u) => (u.id === id ? { ...u, achievements: [...u.achievements, text] } : u)));
-  const addPhoto = (id, photo) =>
-    setUnis((prev) => prev.map((u) => (u.id === id ? { ...u, photos: [...u.photos, photo] } : u)));
+  const load = async () => {
+    try { const { posts: p } = await callApi('posts.list'); setPosts(p || []); }
+    catch { setPosts([]); }
+  };
+  useEffect(() => { load(); }, [user?.id]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
@@ -188,44 +195,163 @@ export default function Universities() {
           </span>
           <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">Витрина на университетите</h1>
           <p className="mt-3 text-slate-400">
-            Университетите представят кампуси, постижения и програми. Влез с роля „Университет“, за да редактираш.
+            Университетите публикуват новини и събития. Учениците ги харесват. Влез с роля „Университет“, за да публикуваш.
           </p>
         </div>
-        <span
-          className={`chip ${isUni ? 'border-accent/30 bg-accent/10 text-accent-soft' : 'text-slate-400'}`}
-        >
-          {isUni ? <><Icon.check size={14} /> Режим на редакция</> : <><Icon.users size={14} /> Режим на преглед</>}
+        <span className={`chip ${isUni ? 'border-accent/30 bg-accent/10 text-accent-soft' : 'text-slate-400'}`}>
+          {isUni ? <><Icon.check size={14} /> Можеш да публикуваш</> : <><Icon.users size={14} /> Режим на преглед</>}
         </span>
       </motion.div>
 
+      {/* Публикации — persistent, shared feed */}
+      <section className="mb-12">
+        <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-white">
+          <Icon.chat size={18} className="text-accent-soft" /> Публикации
+        </h2>
+
+        {isUni && <Composer onPosted={(post) => setPosts((prev) => [post, ...prev])} />}
+
+        {!user && (
+          <div className="glass mb-5 flex flex-col items-center gap-2 p-5 text-center">
+            <p className="text-sm text-slate-400">Влез като ученик, за да харесваш публикации, или като университет, за да публикуваш.</p>
+            <button
+              onClick={() => window.dispatchEvent(new CustomEvent('unikompas:open-auth'))}
+              className="btn-primary px-5 py-2.5 text-sm"
+            >
+              <Icon.users size={16} /> Вход / Регистрация
+            </button>
+          </div>
+        )}
+
+        {posts.length === 0 ? (
+          <div className="glass p-8 text-center text-sm text-slate-400">Все още няма публикации.</div>
+        ) : (
+          <div className="space-y-3">
+            {posts.map((p) => (
+              <PostCard key={p.id} post={p} canLike={isStudent} onChange={(np) =>
+                setPosts((prev) => prev.map((x) => (x.id === np.id ? np : x)))
+              } />
+            ))}
+          </div>
+        )}
+      </section>
+
+      {/* Static showcase */}
+      <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-white">
+        <Icon.cap size={18} className="text-accent-soft" /> Профили
+      </h2>
       <div className="grid gap-6 lg:grid-cols-3">
-        {unis.map((u, i) => (
-          <UniCard
-            key={u.id}
-            uni={u}
-            delay={0.05 * i}
-            editable={isUni}
-            onAddAchievement={(t) => addAchievement(u.id, t)}
-            onAddPhoto={(p) => addPhoto(u.id, p)}
-          />
+        {SEED.map((u, i) => (
+          <UniCard key={u.id} uni={u} delay={0.04 * i} />
         ))}
       </div>
     </div>
   );
 }
 
-function UniCard({ uni, delay, editable, onAddAchievement, onAddPhoto }) {
-  const [ach, setAch] = useState('');
-  const fileRef = useRef(null);
+function Composer({ onPosted }) {
+  const [title, setTitle] = useState('');
+  const [body, setBody] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
 
-  const onFile = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      onAddPhoto({ label: file.name.replace(/\.[^.]+$/, ''), url: URL.createObjectURL(file) });
-      e.target.value = '';
-    }
+  const submit = async () => {
+    if (!body.trim() || busy) return;
+    setBusy(true); setError('');
+    try {
+      const { post } = await callApi('post.create', { title: title.trim(), body: body.trim() });
+      onPosted(post);
+      setTitle(''); setBody('');
+    } catch (e) { setError(e.message || 'Публикуването се провали.'); }
+    finally { setBusy(false); }
   };
 
+  return (
+    <div className="glass mb-5 p-4">
+      <input
+        className="input mb-2"
+        placeholder="Заглавие (по избор)"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+      />
+      <textarea
+        className="input min-h-[90px] resize-y"
+        placeholder="Сподели новина, събитие или ден на отворените врати…"
+        value={body}
+        onChange={(e) => setBody(e.target.value)}
+      />
+      {error && <p className="mt-2 text-sm text-red-300">{error}</p>}
+      <div className="mt-3 flex justify-end">
+        <button onClick={submit} disabled={!body.trim() || busy} className="btn-primary px-4 py-2 text-sm disabled:opacity-40">
+          <Icon.send size={15} /> {busy ? 'Публикуване…' : 'Публикувай'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function PostCard({ post, canLike, onChange }) {
+  const [busy, setBusy] = useState(false);
+
+  const toggle = async () => {
+    if (!canLike || busy) return;
+    setBusy(true);
+    // optimistic
+    const optimistic = {
+      ...post,
+      likedByMe: !post.likedByMe,
+      likeCount: post.likeCount + (post.likedByMe ? -1 : 1),
+    };
+    onChange(optimistic);
+    try {
+      const { liked } = await callApi('post.like.toggle', { postId: post.id });
+      onChange({ ...post, likedByMe: liked, likeCount: post.likeCount + (liked ? 1 : 0) - (post.likedByMe ? 1 : 0) });
+    } catch {
+      onChange(post); // revert
+    } finally { setBusy(false); }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35 }}
+      className="glass p-5"
+    >
+      <div className="flex items-center gap-3">
+        <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent-soft ring-1 ring-accent/30">
+          <Icon.cap size={16} />
+        </span>
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-white">{post.authorName || 'Университет'}</p>
+          <p className="text-[11px] text-slate-500">{fmtDate(post.createdAt)}</p>
+        </div>
+      </div>
+
+      {post.title && <h3 className="mt-3 font-display text-base font-bold text-white">{post.title}</h3>}
+      <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{post.body}</p>
+
+      <div className="mt-4 flex items-center gap-2">
+        <button
+          onClick={toggle}
+          disabled={!canLike || busy}
+          className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
+            post.likedByMe
+              ? 'bg-accent/15 text-accent-soft ring-1 ring-accent/30'
+              : 'bg-white/[0.05] text-slate-400 ring-1 ring-white/10'
+          } ${canLike ? 'hover:text-white' : 'cursor-default'}`}
+          aria-pressed={post.likedByMe}
+          title={canLike ? '' : 'Само ученици могат да харесват'}
+        >
+          <Icon.heart size={14} className={post.likedByMe ? 'fill-current' : ''} /> {post.likeCount}
+        </button>
+        {!canLike && <span className="text-[11px] text-slate-600">харесвания</span>}
+      </div>
+    </motion.div>
+  );
+}
+
+function UniCard({ uni, delay }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95, y: 12 }}
@@ -246,68 +372,33 @@ function UniCard({ uni, delay, editable, onAddAchievement, onAddPhoto }) {
         <h3 className="font-display text-base font-bold leading-tight text-white">{uni.name}</h3>
         <p className="mt-2 text-sm leading-relaxed text-slate-400">{uni.blurb}</p>
 
-        {/* Specifications */}
-        {(uni.founded || uni.fields?.length || uni.tuition || uni.balo) && (
-          <div className="mt-4 space-y-2.5">
-            {uni.founded && (
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <Icon.cap size={13} className="shrink-0 text-accent-soft" /> осн. {uni.founded}
-              </div>
-            )}
-            {uni.fields?.length > 0 && (
-              <div className="flex flex-wrap gap-1.5">
-                {uni.fields.map((f) => (
-                  <span key={f} className="chip py-0.5 text-[11px]">{f}</span>
-                ))}
-              </div>
-            )}
-            {uni.tuition && (
-              <div className="flex items-center gap-2 text-xs text-slate-300">
-                <Icon.coin size={13} className="shrink-0 text-accent-soft" /> Такса: {uni.tuition}
-              </div>
-            )}
-            {uni.balo && (
-              <div className="flex items-start gap-2 text-[11px] leading-relaxed text-slate-500">
-                <Icon.calc size={13} className="mt-0.5 shrink-0 text-accent-soft" />
-                <span><span className="font-semibold text-slate-400">Балообразуване: </span>{uni.balo}</span>
-              </div>
-            )}
+        <div className="mt-4 space-y-2.5">
+          <div className="flex items-center gap-2 text-xs text-slate-400">
+            <Icon.cap size={13} className="shrink-0 text-accent-soft" /> осн. {uni.founded}
           </div>
-        )}
-
-        {/* Photos */}
-        <p className="mt-4 text-[11px] uppercase tracking-wider text-slate-500">Галерия</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {uni.photos.map((p, i) => {
-            const obj = typeof p === 'object';
-            return obj ? (
-              <img
-                key={i}
-                src={p.url}
-                alt={p.label}
-                className="h-12 w-16 rounded-lg object-cover ring-1 ring-white/10"
-              />
-            ) : (
-              <span key={i} className="flex h-12 w-16 items-center justify-center rounded-lg bg-white/[0.05] text-center text-[10px] text-slate-400 ring-1 ring-white/10">
-                {p}
-              </span>
-            );
-          })}
-          {editable && (
-            <>
-              <button
-                onClick={() => fileRef.current?.click()}
-                className="grid h-12 w-16 place-items-center rounded-lg border border-dashed border-white/20 text-slate-400 transition-colors hover:border-accent/50 hover:text-accent-soft"
-                aria-label="Качи снимка"
-              >
-                <Icon.upload size={16} />
-              </button>
-              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={onFile} />
-            </>
-          )}
+          <div className="flex flex-wrap gap-1.5">
+            {uni.fields.map((f) => (
+              <span key={f} className="chip py-0.5 text-[11px]">{f}</span>
+            ))}
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-300">
+            <Icon.coin size={13} className="shrink-0 text-accent-soft" /> Такса: {uni.tuition}
+          </div>
+          <div className="flex items-start gap-2 text-[11px] leading-relaxed text-slate-500">
+            <Icon.calc size={13} className="mt-0.5 shrink-0 text-accent-soft" />
+            <span><span className="font-semibold text-slate-400">Балообразуване: </span>{uni.balo}</span>
+          </div>
         </div>
 
-        {/* Achievements */}
+        <p className="mt-4 text-[11px] uppercase tracking-wider text-slate-500">Галерия</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {uni.photos.map((p, i) => (
+            <span key={i} className="flex h-12 w-16 items-center justify-center rounded-lg bg-white/[0.05] text-center text-[10px] text-slate-400 ring-1 ring-white/10">
+              {p}
+            </span>
+          ))}
+        </div>
+
         <p className="mt-4 text-[11px] uppercase tracking-wider text-slate-500">Постижения</p>
         <ul className="mt-2 space-y-1.5">
           {uni.achievements.map((a, i) => (
@@ -317,27 +408,6 @@ function UniCard({ uni, delay, editable, onAddAchievement, onAddPhoto }) {
             </li>
           ))}
         </ul>
-
-        {editable && (
-          <div className="mt-4 flex items-center gap-2">
-            <input
-              className="input py-2 text-sm"
-              placeholder="Добави постижение…"
-              value={ach}
-              onChange={(e) => setAch(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && ach.trim()) { onAddAchievement(ach.trim()); setAch(''); }
-              }}
-            />
-            <button
-              onClick={() => { if (ach.trim()) { onAddAchievement(ach.trim()); setAch(''); } }}
-              disabled={!ach.trim()}
-              className="btn-primary shrink-0 px-3 py-2.5 disabled:opacity-40"
-            >
-              <Icon.check size={16} />
-            </button>
-          </div>
-        )}
       </div>
     </motion.div>
   );

@@ -4,6 +4,7 @@ import { Icon, Flag } from '../lib/icons.jsx';
 import { CRITERIA_BY_ID } from '../lib/scoring.js';
 import { schemeForField } from '../lib/baloobrazuvane.js';
 import { fmtMoney, fmtRange } from '../lib/currency.js';
+import { useAuth } from '../context/AuthContext.jsx';
 
 // Official site if known, else a web search for it — every card stays clickable.
 const websiteHref = (d) =>
@@ -67,6 +68,8 @@ function Metric({ icon: I, label, value, hint }) {
 
 function UniBody({ data, topCriteria, field }) {
   const scheme = schemeForField(field);
+  const { user, isFavorite, toggleFavorite } = useAuth();
+  const fav = isFavorite(data.name);
   return (
     <div className="mt-4 flex flex-1 flex-col">
       <div className="mb-3 flex flex-wrap gap-1.5">
@@ -78,6 +81,18 @@ function UniBody({ data, topCriteria, field }) {
         >
           <Icon.globe size={12} /> {data.website ? 'Сайт' : 'Търси сайт'}
         </a>
+        {user?.role === 'student' && (
+          <button
+            type="button"
+            onClick={() => toggleFavorite({ key: data.name, name: data.name, country: data.country })}
+            className={`chip py-0.5 text-[11px] transition-colors ${
+              fav ? 'border-accent/50 bg-accent/15 text-accent-soft' : 'hover:border-accent/40 hover:text-white'
+            }`}
+            aria-pressed={fav}
+          >
+            <Icon.heart size={12} className={fav ? 'fill-current' : ''} /> {fav ? 'Запазен' : 'Запази'}
+          </button>
+        )}
         {data.bestRank && <span className="chip py-0.5 text-[11px]"><Icon.trophy size={12} /> #{data.bestRank} свят</span>}
         {data.nationalRank && <span className="chip py-0.5 text-[11px]"><Icon.trophy size={12} /> #{data.nationalRank} в България</span>}
         {data.type && <span className="chip py-0.5 text-[11px]">{data.type === 'Public' ? 'Държавен' : 'Частен'}</span>}

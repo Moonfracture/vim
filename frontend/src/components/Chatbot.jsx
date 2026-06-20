@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext.jsx';
 // Chatbot that analyzes the current result cards via Gemini (backend proxy).
 export default function Chatbot({ context }) {
   const { user } = useAuth();
+  const isStudent = user?.role === 'student';
   const [messages, setMessages] = useState([
     { role: 'assistant', text: 'Здравей! Анализирах резултатите. Питай ме например: „Има ли смисъл да уча в чужбина?“ или „Кой е най-евтиният вариант?“' },
   ]);
@@ -18,7 +19,7 @@ export default function Chatbot({ context }) {
   }, [messages, loading]);
 
   const send = async (text) => {
-    if (!user) return;
+    if (!isStudent) return;
     const q = (text ?? input).trim();
     if (!q || loading) return;
     setInput('');
@@ -78,7 +79,7 @@ export default function Chatbot({ context }) {
         )}
       </div>
 
-      {user && messages.length <= 2 && (
+      {isStudent && messages.length <= 2 && (
         <div className="flex flex-wrap gap-2 px-5 pb-3">
           {prompts.map((p) => (
             <button key={p} onClick={() => send(p)} className="chip hover:border-accent/40 hover:text-white">{p}</button>
@@ -86,7 +87,7 @@ export default function Chatbot({ context }) {
         </div>
       )}
 
-      {user ? (
+      {isStudent ? (
         <div className="flex items-center gap-2 border-t border-white/5 p-3">
           <input
             className="input"
@@ -98,6 +99,10 @@ export default function Chatbot({ context }) {
           <button onClick={() => send()} disabled={loading || !input.trim()} className="btn-primary shrink-0 px-3 py-3 disabled:opacity-40">
             <Icon.send size={18} />
           </button>
+        </div>
+      ) : user ? (
+        <div className="border-t border-white/5 p-4 text-center text-sm text-slate-400">
+          AI асистентът е достъпен за ученически профили.
         </div>
       ) : (
         <div className="flex flex-col items-center gap-2 border-t border-white/5 p-4 text-center">

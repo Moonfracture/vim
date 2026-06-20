@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
+import { callApi } from '../lib/api.js';
 
-// Mock community: channels + seeded conversations between applicants and current students.
 const CHANNELS = [
   { id: 'general', name: 'Общи въпроси', desc: 'Кандидатстване, изпити, мотивация' },
   { id: 'cs', name: 'Компютърни науки', desc: 'IT, AI, софтуерно инженерство' },
@@ -11,6 +11,7 @@ const CHANNELS = [
   { id: 'medicine', name: 'Медицина', desc: 'Приемни изпити и стаж' },
 ];
 
+// Seeded example conversations shown above the live, shared thread.
 const SEED = {
   general: [
     { from: 'Мартин (студент, СУ)', role: 'student', text: 'Здравейте! Аз съм втори курс, питайте каквото ви интересува за кандидатстването. 🙂', t: '09:12' },
@@ -31,29 +32,48 @@ const SEED = {
   ],
 };
 
+const fmtTime = (iso) => {
+  try { return new Date(iso).toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' }); }
+  catch { return ''; }
+};
+
 export default function Community() {
   const { user } = useAuth();
   const [active, setActive] = useState('general');
-  const [threads, setThreads] = useState(SEED);
+  const [live, setLive] = useState([]);      // messages from the DB for the active channel
   const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
   const scrollRef = useRef(null);
 
-  const messages = threads[active] || [];
+  const isStudent = user?.role === 'student';
+  const isUni = user?.role === 'university';
+
+  const load = async (channel) => {
+    try {
+      const { messages } = await callApi('community.list', { channel });
+      setLive(messages || []);
+    } catch { setLive([]); }
+  };
+
+  useEffect(() => { load(active); }, [active]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
-  }, [messages.length, active]);
+  }, [live.length, active]);
 
-  const send = () => {
-    if (!user) return;
+  const send = async () => {
     const text = input.trim();
-    if (!text) return;
-    const msg = { from: `${user.name} (ти)`, role: 'me', text, t: 'сега' };
-    setThreads((prev) => ({ ...prev, [active]: [...(prev[active] || []), msg] }));
-    setInput('');
+    if (!text || !isStudent || sending) return;
+    setSending(true);
+    try {
+      const { message } = await callApi('community.post', { channel: active, text });
+      setLive((prev) => [...prev, message]);
+      setInput('');
+    } catch { /* keep input on failure */ } finally { setSending(false); }
   };
 
   const channel = CHANNELS.find((c) => c.id === active);
+  const seeded = SEED[active] || [];
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
@@ -98,51 +118,31 @@ export default function Community() {
         <div className="glass flex min-h-[520px] flex-col overflow-hidden">
           <div className="border-b border-white/5 px-5 py-3.5">
             <p className="text-sm font-semibold text-white">{channel?.name}</p>
-            <p className="text-[11px] text-slate-500">{channel?.desc} · примерен разговор</p>
+            <p className="text-[11px] text-slate-500">{channel?.desc}</p>
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
-            {messages.map((m, i) => {
-              const mine = m.role === 'me';
-              return (
-                <div key={i} className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`max-w-[80%] ${mine ? 'items-end text-right' : ''}`}>
-                    <div className="mb-1 flex items-center gap-2 text-[11px] text-slate-500">
-                      {!mine && <RoleDot role={m.role} />}
-                      <span>{m.from}</span>
-                      <span className="text-slate-600">· {m.t}</span>
-                    </div>
-                    <div
-                      className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-                        mine
-                          ? 'bg-accent text-white'
-                          : m.role === 'student'
-                            ? 'border border-accent/20 bg-accent/[0.06] text-slate-200'
-                            : 'border border-white/10 bg-white/[0.04] text-slate-200'
-                      }`}
-                    >
-                      {m.text}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+            {seeded.map((m, i) => (
+              <Bubble key={`seed-${i}`} from={m.from} role={m.role} text={m.text} t={m.t} mine={false} />
+            ))}
+            {seeded.length > 0 && live.length > 0 && (
+              <div className="flex items-center gap-3 py-1 text-[10px] uppercase tracking-wider text-slate-600">
+                <span className="h-px flex-1 bg-white/10" /> На живо <span className="h-px flex-1 bg-white/10" />
+              </div>
+            )}
+            {live.map((m) => (
+              <Bubble
+                key={m.id}
+                from={m.authorName}
+                role={m.authorRole}
+                text={m.text}
+                t={fmtTime(m.createdAt)}
+                mine={user && m.authorName === user.name}
+              />
+            ))}
           </div>
 
-          {user ? (
-            <div className="flex items-center gap-2 border-t border-white/5 p-3">
-              <input
-                className="input"
-                placeholder="Напиши съобщение…"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && send()}
-              />
-              <button onClick={send} disabled={!input.trim()} className="btn-primary shrink-0 px-3 py-3 disabled:opacity-40">
-                <Icon.send size={18} />
-              </button>
-            </div>
-          ) : (
+          {!user && (
             <div className="flex flex-col items-center gap-2 border-t border-white/5 p-4 text-center">
               <p className="text-sm text-slate-400">Влез в профила си, за да пишеш в общността.</p>
               <button
@@ -153,6 +153,53 @@ export default function Community() {
               </button>
             </div>
           )}
+
+          {isUni && (
+            <div className="border-t border-white/5 p-4 text-center text-sm text-slate-400">
+              Университетските профили не могат да пишат тук. Споделяй новини в{' '}
+              <span className="font-semibold text-accent-soft">Университети</span>.
+            </div>
+          )}
+
+          {isStudent && (
+            <div className="flex items-center gap-2 border-t border-white/5 p-3">
+              <input
+                className="input"
+                placeholder="Напиши съобщение…"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && send()}
+              />
+              <button onClick={send} disabled={!input.trim() || sending} className="btn-primary shrink-0 px-3 py-3 disabled:opacity-40">
+                <Icon.send size={18} />
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Bubble({ from, role, text, t, mine }) {
+  return (
+    <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
+      <div className={`max-w-[80%] ${mine ? 'items-end text-right' : ''}`}>
+        <div className="mb-1 flex items-center gap-2 text-[11px] text-slate-500">
+          {!mine && <RoleDot role={role} />}
+          <span>{from}</span>
+          {t && <span className="text-slate-600">· {t}</span>}
+        </div>
+        <div
+          className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+            mine
+              ? 'bg-accent text-white'
+              : role === 'student'
+                ? 'border border-accent/20 bg-accent/[0.06] text-slate-200'
+                : 'border border-white/10 bg-white/[0.04] text-slate-200'
+          }`}
+        >
+          {text}
         </div>
       </div>
     </div>

@@ -1,31 +1,89 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
+import { callApi, getToken, setToken } from '../lib/api.js';
 
 const AuthContext = createContext(null);
-const KEY = 'unikompas.user';
+const USER_KEY = 'unikompas.user';
 
 export const ROLES = {
-  student: { label: 'Ученик', hint: 'Търси и сравнява университети' },
-  parent: { label: 'Родител', hint: 'Помага в избора на детето' },
-  university: { label: 'Университет', hint: 'Представя програми и постижения' },
+  student: { label: 'Ученик', hint: 'Търси, сравнява и пита AI асистента', plan: 'Безплатен' },
+  university: { label: 'Университет', hint: 'Публикува в „Университети“', plan: 'Платен план' },
 };
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
-    try { return JSON.parse(localStorage.getItem(KEY)) || null; } catch { return null; }
+    try { return JSON.parse(localStorage.getItem(USER_KEY)) || null; } catch { return null; }
   });
+  const [favorites, setFavorites] = useState([]); // [{ key, name, country }]
 
+  // persist the user snapshot (token lives in lib/api.js localStorage)
   useEffect(() => {
-    if (user) localStorage.setItem(KEY, JSON.stringify(user));
-    else localStorage.removeItem(KEY);
+    if (user) localStorage.setItem(USER_KEY, JSON.stringify(user));
+    else localStorage.removeItem(USER_KEY);
   }, [user]);
 
-  // mock auth — no real backend; persists locally for the demo
-  const login = ({ name, email, role }) =>
-    setUser({ name: name || email.split('@')[0], email, role, since: Date.now() });
-  const logout = () => setUser(null);
+  const loadFavorites = useCallback(async () => {
+    if (!getToken()) { setFavorites([]); return; }
+    try {
+      const { favorites: f } = await callApi('favorites.list');
+      setFavorites(f || []);
+    } catch { setFavorites([]); }
+  }, []);
+
+  // on mount (and whenever a token exists), refresh the profile + favorites
+  const didInit = useRef(false);
+  useEffect(() => {
+    if (didInit.current) return;
+    didInit.current = true;
+    if (!getToken()) return;
+    (async () => {
+      try {
+        const { user: u } = await callApi('me');
+        setUser(u);
+        if (u?.role === 'student') loadFavorites();
+      } catch {
+        // token invalid/expired — sign out
+        setToken(''); setUser(null);
+      }
+    })();
+  }, [loadFavorites]);
+
+  const adopt = (res) => {
+    setToken(res.token);
+    setUser(res.user);
+    if (res.user?.role === 'student') loadFavorites(); else setFavorites([]);
+    return res.user;
+  };
+
+  const register = async ({ name, email, password, role }) =>
+    adopt(await callApi('register', { name, email, password, role }));
+  const login = async ({ email, password }) =>
+    adopt(await callApi('login', { email, password }));
+  const logout = () => { setToken(''); setUser(null); setFavorites([]); };
+
+  const isFavorite = useCallback((key) => favorites.some((f) => f.key === key), [favorites]);
+
+  // optimistic toggle; reconciles with the server response
+  const toggleFavorite = useCallback(async (uni) => {
+    if (user?.role !== 'student') return;
+    const key = uni.key;
+    const existed = favorites.some((f) => f.key === key);
+    setFavorites((prev) => existed ? prev.filter((f) => f.key !== key)
+      : [{ key, name: uni.name, country: uni.country }, ...prev]);
+    try {
+      const { favorited } = await callApi('favorite.toggle', {
+        uniKey: key, uniName: uni.name, uniCountry: uni.country,
+      });
+      setFavorites((prev) => {
+        const without = prev.filter((f) => f.key !== key);
+        return favorited ? [{ key, name: uni.name, country: uni.country }, ...without] : without;
+      });
+    } catch {
+      loadFavorites(); // revert to server truth on error
+    }
+  }, [user, favorites, loadFavorites]);
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, register, login, logout, favorites, isFavorite, toggleFavorite, reloadFavorites: loadFavorites }}>
       {children}
     </AuthContext.Provider>
   );

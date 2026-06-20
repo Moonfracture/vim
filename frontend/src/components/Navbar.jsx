@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { Icon } from '../lib/icons.jsx';
 import { ROLES, useAuth } from '../context/AuthContext.jsx';
 import AuthModal from './AuthModal.jsx';
@@ -15,6 +15,7 @@ const links = [
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
+  const navigate = useNavigate();
 
   // let other parts of the app (e.g. the gated chatbot) ask to open the login modal
   useEffect(() => {
@@ -48,14 +49,16 @@ export default function Navbar() {
         <div className="flex items-center gap-2">
           {user ? (
             <div className="flex items-center gap-2">
-              <span className="hidden sm:flex flex-col items-end leading-tight">
-                <span className="text-sm font-semibold text-white">{user.name}</span>
-                <span className="text-[11px] text-accent-soft">{ROLES[user.role]?.label}</span>
-              </span>
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-accent/20 text-sm font-bold uppercase text-accent-soft ring-1 ring-accent/30">
-                {user.name?.[0] || 'U'}
-              </span>
-              <button onClick={logout} className="btn-ghost px-3 py-2 text-xs">Изход</button>
+              <Link to="/profile" className="flex items-center gap-2 rounded-full pl-1 pr-1 transition-colors hover:bg-white/[0.05]">
+                <span className="hidden sm:flex flex-col items-end leading-tight">
+                  <span className="text-sm font-semibold text-white">{user.name}</span>
+                  <span className="text-[11px] text-accent-soft">{ROLES[user.role]?.label}</span>
+                </span>
+                <span className="grid h-9 w-9 place-items-center rounded-full bg-accent/20 text-sm font-bold uppercase text-accent-soft ring-1 ring-accent/30">
+                  {user.name?.[0] || 'U'}
+                </span>
+              </Link>
+              <button onClick={() => { logout(); navigate('/'); }} className="btn-ghost px-3 py-2 text-xs">Изход</button>
             </div>
           ) : (
             <>
