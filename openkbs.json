@@ -1,7 +1,7 @@
 {
   "projectId": "ddfc90041bcf",
   "region": "eu-central-1",
-  "postgres": false,
+  "postgres": true,
   "storage": { "cloudfront": "media" },
   "mqtt": false,
   "functions": [

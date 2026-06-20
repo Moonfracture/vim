@@ -1,75 +1,66 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OpenKBS Project</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .container {
-            background: white;
-            padding: 3rem;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            text-align: center;
-            max-width: 500px;
-        }
-        h1 { color: #333; margin-bottom: 1rem; }
-        p { color: #666; margin-bottom: 2rem; line-height: 1.6; }
-        .btn {
-            display: inline-block;
-            padding: 12px 24px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
-        }
-        .links { margin-top: 2rem; }
-        .links a { color: #667eea; margin: 0 10px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atlas — Should you study abroad?</title>
+  <meta name="description" content="Compare tuition, rent, scholarships, teaching quality, employment and rankings across countries — and decide if studying abroad is worth it.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Spline+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>OpenKBS Project</h1>
-        <p>Your OpenKBS platform is ready. Deploy agents, functions, and build your AI-powered application.</p>
-        <a href="#" class="btn" onclick="testAPI()">Test API</a>
-        <div class="links">
-            <a href="https://openkbs.com/docs">Documentation</a>
-            <a href="https://github.com/open-kbs/openkbs">GitHub</a>
-        </div>
-        <pre id="result" style="margin-top: 2rem; text-align: left; background: #f5f5f5; padding: 1rem; border-radius: 8px; display: none;"></pre>
+  <div class="grain" aria-hidden="true"></div>
+
+  <header class="masthead">
+    <div class="wordmark">
+      <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+      <span>Atlas</span>
     </div>
-    <script>
-        async function testAPI() {
-            const result = document.getElementById('result');
-            result.style.display = 'block';
-            result.textContent = 'Loading...';
-            try {
-                const response = await fetch('/api', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'hello', data: { test: true } })
-                });
-                const data = await response.json();
-                result.textContent = JSON.stringify(data, null, 2);
-            } catch (e) {
-                result.textContent = 'Error: ' + e.message + '\n\nMake sure to deploy the API function first:\nopenkbs fn deploy api';
-            }
-        }
-    </script>
+    <p class="tagline">Is it worth moving abroad to study?</p>
+  </header>
+
+  <main>
+    <section class="hero">
+      <h1 class="display">Compare the real cost<br>of a degree, <em>anywhere</em>.</h1>
+      <p class="lede">Tuition and rent, scholarships, teaching quality, graduate employment and world rankings — side by side. Pick where you're from and where you're tempted to go.</p>
+    </section>
+
+    <section class="panel" id="selector">
+      <div class="field">
+        <label for="home">You're from</label>
+        <div class="select-wrap"><select id="home"></select></div>
+      </div>
+      <div class="arrow" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </div>
+      <div class="field">
+        <label for="target">Tempted by</label>
+        <div class="select-wrap"><select id="target"></select></div>
+      </div>
+      <div class="field">
+        <label for="field-sel">Field</label>
+        <div class="select-wrap"><select id="field-sel"></select></div>
+      </div>
+      <div class="field">
+        <label for="level">Level</label>
+        <div class="select-wrap"><select id="level"></select></div>
+      </div>
+      <button id="compare" class="cta">
+        <span>Compare</span>
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </button>
+    </section>
+
+    <section id="status" class="status" hidden></section>
+    <section id="results" class="results" hidden></section>
+  </main>
+
+  <footer>
+    <p>Data: global tuition &amp; education trends, world university rankings, RateMyProfessor, graduate employment, Numbeo cost of living, WHED. Figures shown are sample data until the full datasets are imported.</p>
+  </footer>
+
+  <script src="app.js"></script>
 </body>
 </html>
