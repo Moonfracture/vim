@@ -1,9 +1,8 @@
 import UniversityCard from './UniversityCard.jsx';
-import bulgaria from '../data/bulgaria.json';
 import { Icon } from '../lib/icons.jsx';
 
-// X-pentomino: BG in the center, four ranked universities in the corners.
-export default function PentominoResults({ results, order, field }) {
+// X-pentomino: best-match BG university in the center, four ranked unis in the corners.
+export default function PentominoResults({ results, order, field, home }) {
   const [tl, tr, bl, br] = [results[0], results[1], results[2], results[3]];
 
   return (
@@ -17,7 +16,7 @@ export default function PentominoResults({ results, order, field }) {
         <Cell card={tr} order={order} field={field} delay={0.1} />
 
         <div className="flex items-center justify-center"><ConnectorRight /></div>
-        <Cell card={bulgaria} order={order} center delay={0} />
+        <Cell card={home} order={order} field={field} center delay={0} />
         <div className="flex items-center justify-center"><ConnectorRight flip /></div>
 
         <Cell card={bl} order={order} field={field} delay={0.15} />
@@ -27,9 +26,11 @@ export default function PentominoResults({ results, order, field }) {
 
       {/* mobile/tablet: center first, then stacked corners */}
       <div className="grid gap-4 sm:grid-cols-2 lg:hidden">
-        <div className="sm:col-span-2">
-          <UniversityCard data={bulgaria} order={order} center />
-        </div>
+        {home && (
+          <div className="sm:col-span-2">
+            <UniversityCard data={home} order={order} field={field} center />
+          </div>
+        )}
         {results.map((r, i) => (
           <UniversityCard key={r.name} data={r} order={order} field={field} delay={0.05 * i} />
         ))}

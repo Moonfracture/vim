@@ -68,6 +68,7 @@ function UniBody({ data, topCriteria, field }) {
     <div className="mt-4 flex flex-1 flex-col">
       <div className="mb-3 flex flex-wrap gap-1.5">
         {data.bestRank && <span className="chip py-0.5 text-[11px]"><Icon.trophy size={12} /> #{data.bestRank} свят</span>}
+        {data.nationalRank && <span className="chip py-0.5 text-[11px]"><Icon.trophy size={12} /> #{data.nationalRank} в България</span>}
         {data.type && <span className="chip py-0.5 text-[11px]">{data.type === 'Public' ? 'Държавен' : 'Частен'}</span>}
         {data.founded && <span className="chip py-0.5 text-[11px]">осн. {data.founded}</span>}
       </div>

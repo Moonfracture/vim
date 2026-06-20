@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
-import { CRITERIA, rankUniversities } from '../lib/scoring.js';
+import { CRITERIA, rankUniversities, rankBulgarian } from '../lib/scoring.js';
 import FieldAutocomplete from '../components/FieldAutocomplete.jsx';
 import SpecialtyAutocomplete from '../components/SpecialtyAutocomplete.jsx';
 import CriteriaRanker from '../components/CriteriaRanker.jsx';
@@ -22,14 +22,16 @@ const REGIONS = [
 ];
 
 // Compact view of a ranked card for the AI assistant context.
-function buildContext(results, { field, region, order }) {
+function buildContext(results, { field, region, order, home }) {
   const top3 = order.slice(0, 3).map((id) => CRITERIA.find((c) => c.id === id)?.label).filter(Boolean);
   return {
     field: field || 'без сфера',
     region: REGIONS.find((r) => r.value === region)?.label,
     priorities: top3,
     home: {
-      name: bulgaria.name,
+      name: home?.name || bulgaria.name,
+      city: home?.city,
+      score: home?.score,
       avgTuition: bulgaria.avgTuition,
       erasmus: bulgaria.erasmus,
       scholarshipAvailability: bulgaria.scholarshipAvailability,
@@ -57,6 +59,7 @@ export default function Search() {
   const [region, setRegion] = useState('all');
   const [order, setOrder] = useState(CRITERIA.map((c) => c.id));
   const [results, setResults] = useState(null);
+  const [home, setHome] = useState(null);
 
   const canCompare = !!field && order.length > 0;
 
@@ -64,6 +67,7 @@ export default function Search() {
     if (!canCompare) return;
     const ranked = rankUniversities(universities, { field, region, orderedIds: order, top: 4 });
     setResults(ranked);
+    setHome(rankBulgarian(bulgaria, { field, orderedIds: order })[0] || null);
     // scroll to results after they mount
     setTimeout(() => {
       document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -71,8 +75,8 @@ export default function Search() {
   };
 
   const context = useMemo(
-    () => (results ? buildContext(results, { field, region, order }) : null),
-    [results, field, region, order]
+    () => (results ? buildContext(results, { field, region, order, home }) : null),
+    [results, field, region, order, home]
   );
 
   return (
@@ -178,7 +182,7 @@ export default function Search() {
               </div>
             </div>
 
-            <PentominoResults results={results} order={order} field={field} />
+            <PentominoResults results={results} order={order} field={field} home={home} />
 
             <div className="mt-10">
               <Chatbot context={context} />
