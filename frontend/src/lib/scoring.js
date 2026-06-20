@@ -62,14 +62,15 @@ export function scoreUniversity(u, orderedIds) {
 }
 
 // filter + rank universities; returns top N (default 4 for the pentomino corners)
-export function rankUniversities(universities, { field, region, orderedIds, top = 4 }) {
-  let pool = universities;
-  if (region && region !== 'all') pool = pool.filter(u => u.region === region);
+export function rankUniversities(universities, { field, region, countries, orderedIds, top = 4 }) {
+  // region + country narrowing (empty countries = whole region); field applied on top
+  const geo = (u) =>
+    (!region || region === 'all' || u.region === region) &&
+    (!countries?.length || countries.includes(u.iso2));
+  let pool = universities.filter(geo);
   if (field) pool = pool.filter(u => u.fields?.includes(field));
-  // if a field filter wipes everything (sparse data), fall back to region-only
-  if (!pool.length) {
-    pool = region && region !== 'all' ? universities.filter(u => u.region === region) : universities;
-  }
+  // if a field filter wipes everything (sparse data), fall back to the geo pool
+  if (!pool.length) pool = universities.filter(geo);
   return pool
     .map(u => ({ ...u, ...scoreUniversity(u, orderedIds) }))
     .sort((a, b) => b.score - a.score)

@@ -1,15 +1,37 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
 import { CRITERIA, rankUniversities, rankBulgarian } from '../lib/scoring.js';
 import { currencyCode } from '../lib/currency.js';
+import { nameBg } from '../lib/countryNames.js';
 import FieldAutocomplete from '../components/FieldAutocomplete.jsx';
 import SpecialtyAutocomplete from '../components/SpecialtyAutocomplete.jsx';
 import CriteriaRanker from '../components/CriteriaRanker.jsx';
+import CountryFilter from '../components/CountryFilter.jsx';
 import PentominoResults from '../components/PentominoResults.jsx';
 import Chatbot from '../components/Chatbot.jsx';
 import universities from '../data/universities.json';
 import bulgaria from '../data/bulgaria.json';
+
+// distinct countries in a region, each with its best (lowest) university rank, rank-sorted
+function countriesIn(region) {
+  if (!region || region === 'all') return [];
+  const byIso = new Map();
+  for (const u of universities) {
+    if (u.region !== region) continue;
+    const cur = byIso.get(u.iso2);
+    if (!cur) byIso.set(u.iso2, { iso2: u.iso2, country: u.country, bestRank: u.bestRank ?? null });
+    else if (u.bestRank != null && (cur.bestRank == null || u.bestRank < cur.bestRank)) cur.bestRank = u.bestRank;
+  }
+  return [...byIso.values()].sort((a, b) => (a.bestRank ?? 1e9) - (b.bestRank ?? 1e9));
+}
+
+// "top destinations": countries with a uni in the global top 150; at least the top 3 by rank
+function autoCountries(list) {
+  const top = list.filter((c) => c.bestRank != null && c.bestRank <= 150).map((c) => c.iso2);
+  if (top.length >= 3) return top;
+  return list.slice(0, 3).map((c) => c.iso2);
+}
 
 const REGIONS = [
   { value: 'all', label: 'Всички региони' },
@@ -23,11 +45,12 @@ const REGIONS = [
 ];
 
 // Compact view of a ranked card for the AI assistant context.
-function buildContext(results, { field, region, order, home }) {
+function buildContext(results, { field, region, countryNames, order, home }) {
   const top3 = order.slice(0, 3).map((id) => CRITERIA.find((c) => c.id === id)?.label).filter(Boolean);
   return {
     field: field || 'без сфера',
     region: REGIONS.find((r) => r.value === region)?.label,
+    countries: countryNames?.length ? countryNames : null,
     priorities: top3,
     home: {
       name: home?.name || bulgaria.name,
@@ -62,15 +85,22 @@ export default function Search() {
   const [field, setField] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [region, setRegion] = useState('all');
+  const [countries, setCountries] = useState([]);
   const [order, setOrder] = useState(CRITERIA.map((c) => c.id));
   const [results, setResults] = useState(null);
   const [home, setHome] = useState(null);
+
+  const countriesForRegion = useMemo(() => countriesIn(region), [region]);
+  // when the region changes, reset the country picks to that region's top destinations
+  useEffect(() => {
+    setCountries(autoCountries(countriesForRegion));
+  }, [countriesForRegion]);
 
   const canCompare = !!field && order.length > 0;
 
   const compare = () => {
     if (!canCompare) return;
-    const ranked = rankUniversities(universities, { field, region, orderedIds: order, top: 4 });
+    const ranked = rankUniversities(universities, { field, region, countries, orderedIds: order, top: 4 });
     setResults(ranked);
     setHome(rankBulgarian(bulgaria, { field, orderedIds: order })[0] || null);
     // scroll to results after they mount
@@ -79,10 +109,11 @@ export default function Search() {
     }, 80);
   };
 
-  const context = useMemo(
-    () => (results ? buildContext(results, { field, region, order, home }) : null),
-    [results, field, region, order, home]
-  );
+  const context = useMemo(() => {
+    if (!results) return null;
+    const countryNames = countriesForRegion.filter((c) => countries.includes(c.iso2)).map((c) => nameBg(c.country));
+    return buildContext(results, { field, region, countryNames, order, home });
+  }, [results, field, region, countries, countriesForRegion, order, home]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
@@ -142,6 +173,10 @@ export default function Search() {
                 <Icon.arrow size={15} />
               </span>
             </div>
+          </div>
+
+          <div className="sm:col-span-2">
+            <CountryFilter available={countriesForRegion} selected={countries} onChange={setCountries} />
           </div>
         </div>
 
