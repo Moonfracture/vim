@@ -37,6 +37,10 @@ const SRC = {
   cost: firstExisting([
     path.join(__dirname, 'data/cost-of-living_v2.csv'),
   ]),
+  the: firstExisting([
+    path.join(__dirname, 'data/the_rankings_2026.csv'),
+    '/tmp/ds/9f19c42b_archive_1_/THE World University Rankings 2016-2026.csv',
+  ]),
 };
 
 function firstExisting(paths) {
@@ -192,7 +196,7 @@ const countryByName = Object.fromEntries(countries.map(c => [c.name, c]));
 
 // ---------------- universities.json ----------------
 const rankRows = table(SRC.rankings);
-const universities = rankRows.map(r => {
+const enriched = rankRows.map(r => {
   const name = r['university'];
   const country = r['country'];
   const c = countryByName[country];
@@ -229,6 +233,90 @@ const universities = rankRows.map(r => {
     quiet: seededScore(name, 'quiet'),
   };
 }).filter(u => u.name);
+
+// ---- breadth: Times Higher Education 2026 (~2200 rows) merged in ----
+// THE has no per-university city, employer reputation or founding year, so those
+// are left null and the UI shows the country + country-average cost honestly.
+const THE_COUNTRY = { 'United States': 'USA', 'United Kingdom': 'UK', 'Russian Federation': 'Russia' };
+const theCountry = c => THE_COUNTRY[c] || c;
+
+// short/abbreviated names in the enriched set that don't normalize-match THE
+const ALIAS = {
+  'MIT': 'Massachusetts Institute of Technology',
+  'NUS Singapore': 'National University of Singapore',
+  'Caltech': 'California Institute of Technology',
+  'Univ of Chicago': 'University of Chicago',
+  'Univ of Hong Kong': 'The University of Hong Kong',
+  'NTU Singapore': 'Nanyang Technological University, Singapore',
+  'Univ of Pennsylvania': 'University of Pennsylvania',
+  'Univ of Melbourne': 'The University of Melbourne',
+  'UC Berkeley': 'University of California, Berkeley',
+  'Univ of Sydney': 'The University of Sydney',
+  'Univ of Toronto': 'University of Toronto',
+  'Univ of Michigan': 'University of Michigan-Ann Arbor',
+  'Univ of Manchester': 'The University of Manchester',
+  'Univ of Tokyo': 'The University of Tokyo',
+  'Univ of Edinburgh': 'The University of Edinburgh',
+  'CUHK Hong Kong': 'The Chinese University of Hong Kong',
+  'UCLA': 'University of California, Los Angeles',
+  'Paris-Saclay University': 'Université Paris-Saclay',
+  'LSE': 'London School of Economics and Political Science',
+  'Univ of Amsterdam': 'University of Amsterdam',
+  'KAIST': 'Korea Advanced Institute of Science and Technology (KAIST)',
+  'Australian National Univ': 'The Australian National University',
+  'NYU': 'New York University',
+  'Delft Univ of Technology': 'Delft University of Technology',
+  'Univ of British Columbia': 'University of British Columbia',
+  'Technical Univ of Munich': 'Technical University of Munich',
+  'Univ of Sao Paulo': 'University of São Paulo',
+  'Univ of Cape Town': 'University of Cape Town',
+  'IIT Bombay': 'Indian Institute of Technology Bombay',
+  'KFUPM Saudi Arabia': 'King Fahd University of Petroleum and Minerals',
+  'Univ of Warsaw': 'University of Warsaw',
+};
+const normName = s => (s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]/g, '');
+const enrichedKeys = new Set(enriched.flatMap(u => [normName(u.name), normName(ALIAS[u.name] || '')].filter(Boolean)));
+
+const CAP = 19; // top N per country -> ~800 total
+const perCountry = {};
+const theUnis = table(SRC.the)
+  .map(r => ({ rank: num(r['Rank']), name: r['Name'], country: theCountry(r['Country']), score: num(r['Overall Score']), teaching: num(r['Teaching']) }))
+  .filter(r => r.name && r.score != null && countryByName[r.country] && r.rank != null)
+  .sort((a, b) => a.rank - b.rank)
+  .filter(r => !enrichedKeys.has(normName(r.name)))
+  .filter(r => { perCountry[r.country] = (perCountry[r.country] || 0) + 1; return perCountry[r.country] <= CAP; })
+  .map(r => {
+    const c = countryByName[r.country];
+    return {
+      name: r.name,
+      country: r.country,
+      iso2: iso2(r.country),
+      region: regionOf(r.country),
+      city: null,
+      type: null,
+      qsRank: null, theRank: r.rank, bestRank: r.rank,
+      qsScore: r.score, // THE overall score (0..100) — prestige proxy for scoring
+      employerRep: null,
+      academicRep: null,
+      teaching: r.teaching,
+      founded: null,
+      totalStudents: null,
+      intlPct: null,
+      nobel: null,
+      fields: fieldsFor(r.name),
+      avgTuition: c?.avgTuition ?? null,
+      costOfLiving: c?.costOfLiving ?? null,
+      monthlyCost: monthlyCostFor(r.country, null),
+      scholarshipAvailability: c?.scholarshipAvailability ?? null,
+      erasmus: regionOf(r.country) === 'Europe' ? seededScore(r.name, 'eras', 70, 98) : seededScore(r.name, 'eras', 20, 55),
+      nightlife: seededScore(r.name, 'night'),
+      parks: seededScore(r.name, 'parks'),
+      malls: seededScore(r.name, 'malls'),
+      quiet: seededScore(r.name, 'quiet'),
+    };
+  });
+
+const universities = [...enriched, ...theUnis];
 
 // ---------------- bulgaria.json (home / center card) ----------------
 // Curated, real metadata for Bulgarian universities (Scimago gives only rank).
@@ -316,6 +404,8 @@ write('fields.json', { fields: FIELDS, meta: FIELD_META });
 console.log('Built data:', {
   countries: countries.length,
   universities: universities.length,
+  enriched: enriched.length,
+  fromTHE: theUnis.length,
   bgUniversities: bgUnis.length,
   bgInTuition: !!countryByName['Bulgaria'],
 });

@@ -37,7 +37,7 @@ export default function UniversityCard({ data, order, field, center = false, del
         <div className="min-w-0">
           <h3 className="truncate font-display text-base font-bold leading-tight text-white">{data.name}</h3>
           <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-400">
-            <Icon.pin size={12} /> {isCountry ? `${data.universityCount} университета` : `${data.city}`}
+            <Icon.pin size={12} /> {isCountry ? `${data.universityCount} университета` : (data.city || data.country)}
           </p>
         </div>
       </div>
