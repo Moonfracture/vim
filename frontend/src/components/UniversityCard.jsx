@@ -1,12 +1,14 @@
 import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { Icon, Flag } from '../lib/icons.jsx';
 import { CRITERIA_BY_ID } from '../lib/scoring.js';
+import { schemeForField } from '../lib/baloobrazuvane.js';
 
 const fmtUSD = (n) => (n == null ? '—' : '$' + Math.round(n).toLocaleString('en-US'));
 const fmtMonthly = (n) => (n == null ? '—' : '~$' + Math.round(n).toLocaleString('en-US'));
 
 // One result card. `center` styles the Bulgaria home card differently.
-export default function UniversityCard({ data, order, center = false, delay = 0 }) {
+export default function UniversityCard({ data, order, field, center = false, delay = 0 }) {
   const isCountry = !!data.topUniversities; // bulgaria card shape
   const topCriteria = (order || []).slice(0, 3);
 
@@ -43,7 +45,7 @@ export default function UniversityCard({ data, order, center = false, delay = 0 
       {isCountry ? (
         <CountryBody data={data} />
       ) : (
-        <UniBody data={data} topCriteria={topCriteria} />
+        <UniBody data={data} topCriteria={topCriteria} field={field} />
       )}
     </motion.div>
   );
@@ -60,7 +62,8 @@ function Metric({ icon: I, label, value, hint }) {
   );
 }
 
-function UniBody({ data, topCriteria }) {
+function UniBody({ data, topCriteria, field }) {
+  const scheme = schemeForField(field);
   return (
     <div className="mt-4 flex flex-1 flex-col">
       <div className="mb-3 flex flex-wrap gap-1.5">
@@ -75,6 +78,23 @@ function UniBody({ data, topCriteria }) {
         <Metric icon={Icon.globe} label="Еразъм" value={`${data.erasmus ?? '—'}/100`} />
         {data.employerRep != null && <Metric icon={Icon.spark} label="Репутация работодатели" value={`${Math.round(data.employerRep)}/100`} />}
       </div>
+
+      {/* балообразуване by field — links to the calculator pre-set for this profile */}
+      <Link
+        to={`/calculator?scheme=${scheme.id}`}
+        className="group mt-2.5 flex items-center gap-2.5 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 transition-colors hover:border-accent/40 hover:bg-accent/[0.06]"
+      >
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-lg bg-accent/15 text-accent-soft ring-1 ring-accent/30">
+          <Icon.calc size={15} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-[11px] uppercase tracking-wider text-slate-500">Балообразуване</span>
+          <span className="block truncate text-xs font-medium text-slate-200">{scheme.formula}</span>
+        </span>
+        <span className="flex shrink-0 items-center gap-1 text-xs font-semibold text-accent-soft transition-transform group-hover:translate-x-0.5">
+          Изчисли <Icon.arrow size={13} />
+        </span>
+      </Link>
 
       {/* how it scores on the user's top criteria */}
       <div className="mt-3 space-y-1.5">
@@ -110,10 +130,11 @@ function CountryBody({ data }) {
       </div>
       <p className="mt-3 text-[11px] uppercase tracking-wider text-slate-500">Топ университети</p>
       <ul className="mt-1.5 space-y-1">
-        {data.topUniversities.slice(0, 4).map((u, i) => (
+        {data.topUniversities.slice(0, 5).map((u, i) => (
           <li key={u.name} className="flex items-center gap-2 text-xs text-slate-300">
             <span className="grid h-4 w-4 shrink-0 place-items-center rounded bg-white/10 text-[10px] font-bold text-slate-400">{i + 1}</span>
-            <span className="truncate">{u.name}</span>
+            <span className="min-w-0 flex-1 truncate">{u.nameBg || u.name}</span>
+            {u.city && <span className="shrink-0 text-[11px] text-slate-500">{u.city}</span>}
           </li>
         ))}
       </ul>

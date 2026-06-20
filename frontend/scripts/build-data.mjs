@@ -231,13 +231,47 @@ const universities = rankRows.map(r => {
 }).filter(u => u.name);
 
 // ---------------- bulgaria.json (home / center card) ----------------
+// Curated, real metadata for Bulgarian universities (Scimago gives only rank).
+// City + founding year are stable facts; балообразуване notes are orientational
+// summaries of public admission rules (uni-sofia.bg, mu-sofia.bg, unwe.bg).
+const BG_META = {
+  'Sofia University': { nameBg: 'СУ „Св. Климент Охридски“', city: 'София', founded: 1888, fields: ['Компютърни науки', 'Право', 'Природни науки', 'Хуманитарни науки', 'Социални науки'], balo: 'Признават се матури; за Информатика (ФМИ) математика с коеф. 2.5 + оценки от диплома' },
+  'Medical University of Varna Prof Dr Paraskev Stoyano': { nameBg: 'Медицински университет – Варна', city: 'Варна', founded: 1961, fields: ['Медицина'], balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42' },
+  'Medical University of Sofia *': { nameBg: 'Медицински университет – София', city: 'София', founded: 1917, fields: ['Медицина'], balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42' },
+  'Medical University - Plovdiv': { nameBg: 'Медицински университет – Пловдив', city: 'Пловдив', founded: 1945, fields: ['Медицина'], balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42' },
+  'University of Plovdiv Paisii Hilendarski': { nameBg: 'ПУ „Паисий Хилендарски“', city: 'Пловдив', founded: 1961, fields: ['Компютърни науки', 'Природни науки', 'Хуманитарни науки', 'Социални науки'], balo: 'Матури и/или кандидатстудентски изпити според специалността' },
+  'University of Food Technologies, Plovdiv': { nameBg: 'Университет по хранителни технологии', city: 'Пловдив', founded: 1953, fields: ['Инженерство', 'Природни науки'], balo: 'Изпит/матура по математика, химия или биология + оценки от диплома' },
+  'University of Rousse': { nameBg: 'Русенски университет „Ангел Кънчев“', city: 'Русе', founded: 1945, fields: ['Инженерство', 'Компютърни науки', 'Бизнес и икономика'], balo: 'Матура/изпит по математика или БЕЛ + оценки от диплома' },
+  'University of Chemical Technology and Metallurgy': { nameBg: 'Химикотехнологичен и металургичен университет', city: 'София', founded: 1953, fields: ['Инженерство', 'Природни науки'], balo: 'Изпит/матура по математика или химия + оценки от диплома' },
+  'University of Forestry Sofia': { nameBg: 'Лесотехнически университет', city: 'София', founded: 1925, fields: ['Природни науки', 'Инженерство'], balo: 'Матура/изпит по биология или математика + оценки от диплома' },
+  'University of National and World Economy': { nameBg: 'УНСС', city: 'София', founded: 1920, fields: ['Бизнес и икономика', 'Право', 'Социални науки'], balo: 'Единен приемен изпит или матура (математика/БЕЛ) + оценки от диплома' },
+  'New Bulgarian University': { nameBg: 'Нов български университет', city: 'София', founded: 1991, fields: ['Бизнес и икономика', 'Социални науки', 'Изкуства и дизайн', 'Хуманитарни науки'], balo: 'По документи и/или тест; матурите се признават' },
+  'Technical University of Sofia': { nameBg: 'Технически университет – София', city: 'София', founded: 1945, fields: ['Инженерство', 'Компютърни науки'], balo: 'Матура/изпит по математика (до 3×) + оценки от диплома' },
+  'Trakia University': { nameBg: 'Тракийски университет', city: 'Стара Загора', founded: 1995, fields: ['Медицина', 'Природни науки', 'Инженерство'], balo: 'Матури/изпити според специалността + оценки от диплома' },
+  'South West University Neofit Rilski': { nameBg: 'ЮЗУ „Неофит Рилски“', city: 'Благоевград', founded: 1976, fields: ['Хуманитарни науки', 'Социални науки', 'Изкуства и дизайн', 'Природни науки'], balo: 'Матури и/или кандидатстудентски изпити според специалността' },
+  'University of Architecture, Civil Engineering and Geodesy': { nameBg: 'УАСГ', city: 'София', founded: 1942, fields: ['Инженерство', 'Изкуства и дизайн'], balo: 'Изпит по математика + изпит по рисуване (за архитектура) + диплома' },
+  'Agricultural University of Plovdiv': { nameBg: 'Аграрен университет – Пловдив', city: 'Пловдив', founded: 1945, fields: ['Природни науки'], balo: 'Матура/изпит по биология или математика + оценки от диплома' },
+  'Technical University of Varna': { nameBg: 'Технически университет – Варна', city: 'Варна', founded: 1962, fields: ['Инженерство', 'Компютърни науки'], balo: 'Матура/изпит по математика + оценки от диплома' },
+  'Technical University of Gabrovo': { nameBg: 'Технически университет – Габрово', city: 'Габрово', founded: 1964, fields: ['Инженерство', 'Компютърни науки'], balo: 'Матура/изпит по математика + оценки от диплома' },
+  'Prof Dr Assen Zlatarov University': { nameBg: 'Университет „Проф. д-р Асен Златаров“', city: 'Бургас', founded: 1963, fields: ['Инженерство', 'Природни науки', 'Медицина'], balo: 'Матура/изпит по математика, химия или биология + оценки от диплома' },
+};
+
 const bgRows = table(SRC.bg, ';');
-const bgUnis = bgRows.map(r => ({
-  name: r['Institution'],
-  globalRank: num(r['Global Rank']),
-  nationalRank: num(r['Rank']),
-  quartile: num(r['Best Country Quartile']),
-})).filter(u => u.name);
+const bgUnis = bgRows.map(r => {
+  const name = r['Institution'];
+  const m = BG_META[name] || {};
+  return {
+    name,
+    nameBg: m.nameBg || name,
+    city: m.city || null,
+    founded: m.founded || null,
+    fields: m.fields || [],
+    balo: m.balo || null,
+    globalRank: num(r['Global Rank']),
+    nationalRank: num(r['Rank']),
+    quartile: num(r['Best Country Quartile']),
+  };
+}).filter(u => u.name);
 // Bulgaria is absent from the tuition dataset — craft a sensible home baseline.
 const bulgaria = {
   name: 'България',
@@ -255,7 +289,7 @@ const bulgaria = {
   parks: 72,
   malls: 70,
   quiet: 66,
-  topUniversities: bgUnis.slice(0, 6),
+  topUniversities: bgUnis.slice(0, 8),
   universityCount: bgUnis.length,
 };
 

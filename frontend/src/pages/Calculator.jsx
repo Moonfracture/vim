@@ -1,43 +1,14 @@
 import { useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
+import { SCHEMES, SCHEME_BY_ID } from '../lib/baloobrazuvane.js';
 
 // Bulgarian admission-score ("балообразуване") calculator.
 // Every university/specialty has its own formula, so this is an *orientational*
 // tool: pick a scheme (or build your own), enter grades 2.00–6.00, edit the
 // coefficients, and see the resulting бал and how close it is to the maximum.
-const PRESETS = [
-  {
-    id: 'standard',
-    label: 'Стандартна (2 матури + 2 оценки)',
-    rows: [
-      { label: 'ДЗИ Български език и литература', coef: 2 },
-      { label: 'Втора матура (по профил)', coef: 2 },
-      { label: 'Оценка от диплома', coef: 1 },
-      { label: 'Оценка от диплома', coef: 1 },
-    ],
-  },
-  {
-    id: 'tech',
-    label: 'Технически / Информатика',
-    rows: [
-      { label: 'Изпит/ДЗИ Математика', coef: 3 },
-      { label: 'ДЗИ Български език и литература', coef: 1 },
-      { label: 'Оценка от диплома — Математика', coef: 1 },
-      { label: 'Оценка от диплома — Информатика/Физика', coef: 1 },
-    ],
-  },
-  {
-    id: 'med',
-    label: 'Медицина',
-    rows: [
-      { label: 'Изпит Биология', coef: 3 },
-      { label: 'Изпит Химия', coef: 3 },
-      { label: 'Оценка от диплома — Биология', coef: 1 },
-      { label: 'Оценка от диплома — Химия', coef: 1 },
-    ],
-  },
-];
+const PRESETS = SCHEMES;
 
 const clampGrade = (v) => {
   const n = parseFloat(String(v).replace(',', '.'));
@@ -46,8 +17,10 @@ const clampGrade = (v) => {
 };
 
 export default function Calculator() {
-  const [presetId, setPresetId] = useState('standard');
-  const [rows, setRows] = useState(() => PRESETS[0].rows.map((r) => ({ ...r, grade: '' })));
+  const [params] = useSearchParams();
+  const initial = SCHEME_BY_ID[params.get('scheme')] || PRESETS[0];
+  const [presetId, setPresetId] = useState(initial.id);
+  const [rows, setRows] = useState(() => initial.rows.map((r) => ({ ...r, grade: '' })));
 
   const applyPreset = (p) => {
     setPresetId(p.id);

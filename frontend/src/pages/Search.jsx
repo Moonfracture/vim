@@ -175,7 +175,7 @@ export default function Search() {
               </div>
             </div>
 
-            <PentominoResults results={results} order={order} />
+            <PentominoResults results={results} order={order} field={field} />
 
             <div className="mt-10">
               <Chatbot context={context} />

@@ -47,7 +47,7 @@ export default function FieldAutocomplete({ value, onChange }) {
       </div>
 
       {open && suggestions.length > 0 && (
-        <ul className="glass absolute z-30 mt-2 w-full overflow-hidden p-1.5">
+        <ul className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-ink-900 p-1.5 shadow-2xl shadow-black/60">
           {suggestions.map((s, i) => (
             <li key={s.field}>
               <button
