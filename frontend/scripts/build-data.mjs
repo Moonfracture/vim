@@ -34,6 +34,9 @@ const SRC = {
     '/home/user/project/.uploads/d24ea44e_ScimagoIR_2026_-_Overall_Rank_-_Universities_-_BGR.csv',
     path.join(__dirname, 'data/scimago_bgr.csv'),
   ]),
+  cost: firstExisting([
+    path.join(__dirname, 'data/cost-of-living_v2.csv'),
+  ]),
 };
 
 function firstExisting(paths) {
@@ -142,6 +145,34 @@ function fieldsFor(name) {
   return [...set];
 }
 
+// ---------------- cost of living (real, per city) ----------------
+// cost-of-living_v2.csv is a Numbeo-style table with columns x1..x55. We use:
+//   x1  Meal, inexpensive restaurant      x29 Monthly transit pass
+//   x36 Basic utilities (85m²)            x49 1-bedroom rent, outside centre
+// to estimate a student's orientational monthly budget (USD). Honest approximation.
+const COST_COUNTRY = { USA: 'United States', UK: 'United Kingdom' };
+const costCountry = c => COST_COUNTRY[c] || c;
+const normCity = s => (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').split(',')[0].trim();
+
+const costRows = table(SRC.cost);
+const cityCost = {};            // "Country|city" -> monthly USD
+const ctryAgg = {};            // "Country" -> { s, n }
+for (const r of costRows) {
+  const rent = num(r.x49), util = num(r.x36), transit = num(r.x29), meal = num(r.x1);
+  if (rent == null) continue;  // skip cities without rent data
+  const monthly = Math.round((rent + (util || 0) + (transit || 0) + (meal != null ? meal * 22 : 0)) / 10) * 10;
+  cityCost[`${r.country}|${normCity(r.city)}`] = monthly;
+  (ctryAgg[r.country] ??= { s: 0, n: 0 });
+  ctryAgg[r.country].s += monthly; ctryAgg[r.country].n++;
+}
+const ctryCost = Object.fromEntries(
+  Object.entries(ctryAgg).map(([k, v]) => [k, Math.round(v.s / v.n / 10) * 10])
+);
+function monthlyCostFor(country, city) {
+  const dc = costCountry(country);
+  return cityCost[`${dc}|${normCity(city)}`] ?? ctryCost[dc] ?? null;
+}
+
 // ---------------- countries.json ----------------
 const tuitionRows = table(SRC.tuition);
 const countries = tuitionRows.map(r => {
@@ -188,6 +219,7 @@ const universities = rankRows.map(r => {
     // economics inherited from country (real) — tuition + cost of living
     avgTuition: c?.avgTuition ?? null,
     costOfLiving: c?.costOfLiving ?? null,
+    monthlyCost: monthlyCostFor(country, cityFor(name, country)),
     scholarshipAvailability: c?.scholarshipAvailability ?? null,
     erasmus: regionOf(country) === 'Europe' ? seededScore(name, 'eras', 70, 98) : seededScore(name, 'eras', 20, 55),
     // lifestyle placeholders (no dataset) — deterministic, clearly synthetic
@@ -216,6 +248,7 @@ const bulgaria = {
   minTuition: 900,
   maxTuition: 8000,
   costOfLiving: 38,
+  monthlyCost: monthlyCostFor('Bulgaria', 'Sofia'),
   scholarshipAvailability: 35,
   erasmus: 88,
   nightlife: 78,

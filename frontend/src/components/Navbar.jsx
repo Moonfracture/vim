@@ -7,6 +7,7 @@ import AuthModal from './AuthModal.jsx';
 const links = [
   { to: '/', label: 'Начало', end: true },
   { to: '/search', label: 'Търсене' },
+  { to: '/calculator', label: 'Балообразуване' },
   { to: '/community', label: 'Общност' },
   { to: '/universities', label: 'Университети' },
 ];

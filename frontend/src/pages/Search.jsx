@@ -31,6 +31,7 @@ function buildContext(results, { field, region, order }) {
       erasmus: bulgaria.erasmus,
       scholarshipAvailability: bulgaria.scholarshipAvailability,
       costOfLiving: bulgaria.costOfLiving,
+      monthlyCost: bulgaria.monthlyCost,
     },
     universities: results.map((u) => ({
       name: u.name,
@@ -39,6 +40,7 @@ function buildContext(results, { field, region, order }) {
       score: u.score,
       bestRank: u.bestRank,
       avgTuition: u.avgTuition,
+      monthlyCost: u.monthlyCost,
       erasmus: u.erasmus,
       employerRep: u.employerRep,
       breakdown: u.breakdown?.map((b) => ({ label: b.label, value: b.value })),

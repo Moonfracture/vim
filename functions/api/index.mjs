@@ -24,13 +24,13 @@ function buildPrompt(context) {
   if (context.priorities?.length) lines.push(`Приоритети на ученика (по важност): ${context.priorities.join(', ')}.`);
   lines.push(
     `ДОМ — ${home.name || 'България'}: ср. такса $${home.avgTuition ?? '—'}/год., Еразъм ${home.erasmus ?? '—'}/100, ` +
-    `стипендии ${home.scholarshipAvailability ?? '—'}%, издръжка (индекс) ${home.costOfLiving ?? '—'}/100.`
+    `стипендии ${home.scholarshipAvailability ?? '—'}%, ориентировъчна издръжка ~$${home.monthlyCost ?? '—'}/мес.`
   );
   (context.universities || []).forEach((u, i) => {
     const b = (u.breakdown || []).map((x) => `${x.label} ${x.value}`).join(', ');
     lines.push(
       `${i + 1}. ${u.name} (${u.city || u.country}) — общ скор ${u.score}/100, ` +
-      `световен ранг #${u.bestRank ?? '—'}, такса $${u.avgTuition ?? '—'}/год., Еразъм ${u.erasmus ?? '—'}/100, ` +
+      `световен ранг #${u.bestRank ?? '—'}, такса $${u.avgTuition ?? '—'}/год., издръжка ~$${u.monthlyCost ?? '—'}/мес., Еразъм ${u.erasmus ?? '—'}/100, ` +
       `репутация работодатели ${u.employerRep ?? '—'}/100${b ? `; критерии: ${b}` : ''}.`
     );
   });

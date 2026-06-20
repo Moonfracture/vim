@@ -3,6 +3,7 @@ import { Icon, Flag } from '../lib/icons.jsx';
 import { CRITERIA_BY_ID } from '../lib/scoring.js';
 
 const fmtUSD = (n) => (n == null ? '—' : '$' + Math.round(n).toLocaleString('en-US'));
+const fmtMonthly = (n) => (n == null ? '—' : '~$' + Math.round(n).toLocaleString('en-US'));
 
 // One result card. `center` styles the Bulgaria home card differently.
 export default function UniversityCard({ data, order, center = false, delay = 0 }) {
@@ -69,6 +70,7 @@ function UniBody({ data, topCriteria }) {
       </div>
       <div className="rounded-xl bg-black/20 px-3">
         <Metric icon={Icon.coin} label="Такса/год." value={fmtUSD(data.avgTuition)} />
+        <Metric icon={Icon.bag} label="Издръжка" value={fmtMonthly(data.monthlyCost)} hint="/мес" />
         <Metric icon={Icon.trophy} label="Стойност на диплома" value={`${data.breakdown ? data.breakdown.find(b=>b.id==='degree')?.value ?? '—' : '—'}/100`} />
         <Metric icon={Icon.globe} label="Еразъм" value={`${data.erasmus ?? '—'}/100`} />
         {data.employerRep != null && <Metric icon={Icon.spark} label="Репутация работодатели" value={`${Math.round(data.employerRep)}/100`} />}
@@ -102,7 +104,7 @@ function CountryBody({ data }) {
     <div className="mt-4 flex flex-1 flex-col">
       <div className="rounded-xl bg-black/20 px-3">
         <Metric icon={Icon.coin} label="Ср. такса/год." value={fmtUSD(data.avgTuition)} />
-        <Metric icon={Icon.bag} label="Издръжка (индекс)" value={`${data.costOfLiving}/100`} />
+        <Metric icon={Icon.bag} label="Издръжка" value={fmtMonthly(data.monthlyCost)} hint="/мес" />
         <Metric icon={Icon.spark} label="Стипендии" value={`${data.scholarshipAvailability}%`} />
         <Metric icon={Icon.globe} label="Еразъм" value={`${data.erasmus}/100`} />
       </div>
