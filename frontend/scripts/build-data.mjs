@@ -563,8 +563,183 @@ const FIELD_META = {
   'Изкуства и дизайн': { keywords: ['графичен дизайн', 'архитектура', 'музика', 'кино', 'изящни изкуства'], specialties: ['Графичен дизайн', 'Архитектура', 'Музика', 'Филмово изкуство', 'Изящни изкуства', 'UX/UI дизайн'] },
 };
 
+// ---------------- bg-universities.json (full directory from РСВУ 2025) ----------------
+// The РСВУ specialties list covers all 51 accredited Bulgarian universities. We group
+// it per-university, map each official "професионално направление" to one of our 9 broad
+// fields (for the field filter), and crosswalk the 19 we have rich metadata for to BG_META.
+const readJson = (p) => { try { return JSON.parse(fs.readFileSync(p, 'utf8')); } catch { return null; } };
+const rsvuSpec = readJson(path.join(__dirname, 'data', 'rsvu-specialties.json')) || [];
+const rsvuJoint = readJson(path.join(__dirname, 'data', 'rsvu-joint.json')) || [];
+
+// normalize a Bulgarian uni name for fuzzy matching (strip quotes/dashes/case/space)
+const normUni = (s) => (s || '')
+  .toLowerCase()
+  .replace(/[„“”"'’‘]/g, '')
+  .replace(/[-–—]/g, ' ')
+  .replace(/\s+/g, ' ')
+  .trim();
+
+// crosswalk: unique normalized substring of the РСВУ name -> BG_META English key
+const CROSSWALK = [
+  ['софийски университет', 'Sofia University'],
+  ['параскев стоянов', 'Medical University of Varna Prof Dr Paraskev Stoyano'],
+  ['медицински университет софия', 'Medical University of Sofia *'],
+  ['медицински университет пловдив', 'Medical University - Plovdiv'],
+  ['пловдивски университет', 'University of Plovdiv Paisii Hilendarski'],
+  ['университет по хранителни технологии', 'University of Food Technologies, Plovdiv'],
+  ['русенски университет', 'University of Rousse'],
+  ['химикотехнологичен', 'University of Chemical Technology and Metallurgy'],
+  ['лесотехнически', 'University of Forestry Sofia'],
+  ['университет за национално и световно стопанство', 'University of National and World Economy'],
+  ['нов български университет', 'New Bulgarian University'],
+  ['технически университет софия', 'Technical University of Sofia'],
+  ['тракийски университет', 'Trakia University'],
+  ['югозападен университет', 'South West University Neofit Rilski'],
+  ['университет по архитектура', 'University of Architecture, Civil Engineering and Geodesy'],
+  ['аграрен университет', 'Agricultural University of Plovdiv'],
+  ['технически университет варна', 'Technical University of Varna'],
+  ['технически университет габрово', 'Technical University of Gabrovo'],
+  ['асен златаров', 'Prof Dr Assen Zlatarov University'],
+];
+const crosswalkKey = (nameBg) => {
+  const n = normUni(nameBg);
+  for (const [sub, key] of CROSSWALK) if (n.includes(sub)) return key;
+  return null;
+};
+
+// map official РСВУ professional field -> one of our 9 broad fields
+const FIELD_TO_BROAD = {
+  'Информатика и компютърни науки': 'Компютърни науки',
+  'Комуникационна и компютърна техника': 'Компютърни науки',
+  'Машинно инженерство': 'Инженерство',
+  'Електротехника, електроника и автоматика': 'Инженерство',
+  'Енергетика': 'Инженерство',
+  'Общо инженерство': 'Инженерство',
+  'Транспорт, корабоплаване и авиация': 'Инженерство',
+  'Металургия': 'Инженерство',
+  'Материали и материалознание': 'Инженерство',
+  'Архитектура, строителство и геодезия': 'Инженерство',
+  'Химични технологии': 'Инженерство',
+  'Хранителни технологии': 'Инженерство',
+  'Биотехнологии': 'Инженерство',
+  'Проучване, добив и обработка на полезни изкопаеми': 'Инженерство',
+  'Медицина': 'Медицина',
+  'Дентална медицина': 'Медицина',
+  'Фармация': 'Медицина',
+  'Здравни грижи': 'Медицина',
+  'Обществено здраве': 'Медицина',
+  'Ветеринарна медицина': 'Медицина',
+  'Икономика': 'Бизнес и икономика',
+  'Администрация и управление': 'Бизнес и икономика',
+  'Туризъм': 'Бизнес и икономика',
+  'Право': 'Право',
+  'Физически науки': 'Природни науки',
+  'Химически науки': 'Природни науки',
+  'Биологически науки': 'Природни науки',
+  'Математика': 'Природни науки',
+  'Науки за земята': 'Природни науки',
+  'Растениевъдство': 'Природни науки',
+  'Растителна защита': 'Природни науки',
+  'Животновъдство': 'Природни науки',
+  'Горско стопанство': 'Природни науки',
+  'История и археология': 'Хуманитарни науки',
+  'Филология': 'Хуманитарни науки',
+  'Философия': 'Хуманитарни науки',
+  'Религия и теология': 'Хуманитарни науки',
+  'Психология': 'Социални науки',
+  'Социология, антропология и науки за културата': 'Социални науки',
+  'Политически науки': 'Социални науки',
+  'Социални дейности': 'Социални науки',
+  'Обществени комуникации и информационни науки': 'Социални науки',
+  'Национална сигурност': 'Социални науки',
+  'Военно дело': 'Социални науки',
+  'Педагогика': 'Социални науки',
+  'Педагогика на обучението по': 'Социални науки',
+  'Теория и управление на образованието': 'Социални науки',
+  'Спорт': 'Социални науки',
+  'Изобразително изкуство': 'Изкуства и дизайн',
+  'Музикално и танцово изкуство': 'Изкуства и дизайн',
+  'Театрално и филмово изкуство': 'Изкуства и дизайн',
+  'Теория на изкуствата': 'Изкуства и дизайн',
+};
+
+// shorten the РСВУ ОКС string into compact degree tags (best-effort; source is noisy)
+const degreeTags = (oks) => {
+  const out = new Set();
+  for (const part of (oks || '').split(',').map((s) => s.trim())) {
+    if (/професионален бакалавър/i.test(part)) out.add('Проф. бакалавър');
+    else if (/^бакалавър/i.test(part)) out.add('Бакалавър');
+    else if (/магистър/i.test(part)) out.add('Магистър');
+  }
+  return [...out];
+};
+
+const bgByName = Object.fromEntries(bgUnis.map((u) => [u.name, u]));
+const slug = (s) => normUni(s).replace(/[^a-zа-я0-9]+/gi, '-').replace(/^-+|-+$/g, '').slice(0, 60);
+
+// group joint programs by normalized uni name
+const jointByUni = {};
+for (const j of rsvuJoint) {
+  const n = normUni(j.uni);
+  (jointByUni[n] ||= []).push({
+    partner: j.partner, country: j.country, specialties: j.specialties,
+    language: j.language, degree: j.degree, field: j.field,
+  });
+}
+
+const uniMap = new Map();
+for (const r of rsvuSpec) {
+  const nameBg = r.uni;
+  if (!uniMap.has(nameBg)) {
+    const key = crosswalkKey(nameBg);
+    const meta = key ? bgByName[key] : null;
+    uniMap.set(nameBg, {
+      key: key || slug(nameBg),
+      nameBg,
+      crosswalked: !!meta,
+      city: meta?.city ?? null,
+      founded: meta?.founded ?? null,
+      website: meta?.website ?? null,
+      balo: meta?.balo ?? null,
+      globalRank: meta?.globalRank ?? null,
+      nationalRank: meta?.nationalRank ?? null,
+      quartile: meta?.quartile ?? null,
+      tuitionMin: meta?.tuitionMin ?? null,
+      tuitionMax: meta?.tuitionMax ?? null,
+      avgTuition: meta?.avgTuition ?? null,
+      _broad: new Set(),
+      _specs: new Map(), // field|name -> {field, name, degrees:Set}
+    });
+  }
+  const u = uniMap.get(nameBg);
+  const broad = FIELD_TO_BROAD[r.field];
+  if (broad) u._broad.add(broad);
+  const sk = `${r.field}|${r.spec}`;
+  if (!u._specs.has(sk)) u._specs.set(sk, { field: r.field, name: r.spec, degrees: new Set() });
+  for (const d of degreeTags(r.oks)) u._specs.get(sk).degrees.add(d);
+}
+
+const bgUniversities = [...uniMap.values()].map((u) => {
+  const specialties = [...u._specs.values()]
+    .map((s) => ({ field: s.field, name: s.name, degrees: [...s.degrees] }))
+    .sort((a, b) => a.field.localeCompare(b.field, 'bg') || a.name.localeCompare(b.name, 'bg'));
+  const jp = jointByUni[normUni(u.nameBg)] || [];
+  const { _broad, _specs, ...rest } = u;
+  return {
+    ...rest,
+    fields: [...u._broad].sort((a, b) => a.localeCompare(b, 'bg')),
+    specialties,
+    specialtyCount: specialties.length,
+    jointPrograms: jp,
+  };
+}).sort((a, b) => Number(b.crosswalked) - Number(a.crosswalked) || a.nameBg.localeCompare(b.nameBg, 'bg'));
+
+// the РСВУ list is the real count of accredited universities
+bulgaria.universityCount = bgUniversities.length;
+
 // ---------------- write ----------------
 const write = (file, obj) => fs.writeFileSync(path.join(OUT, file), JSON.stringify(obj));
+write('bg-universities.json', bgUniversities);
 write('countries.json', countries);
 write('universities.json', universities);
 write('bulgaria.json', bulgaria);
@@ -577,6 +752,7 @@ console.log('Built data:', {
   enriched: enriched.length,
   fromTHE: theUnis.length,
   bgUniversities: bgUnis.length,
+  bgDirectory: `${bgUniversities.length} unis, ${bgUniversities.filter((u) => u.crosswalked).length} enriched`,
   bgTuitionBGN: `${bgMinTuition}-${bgMaxTuition} USD`,
   fx: `${fxSource} @ ${fxAsOf} (bgnRate ${bgnRate})`,
   currencies: Object.keys(currencies).length - 1,

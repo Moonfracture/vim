@@ -1,8 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
 import { ROLES, useAuth } from '../context/AuthContext.jsx';
+import bgUniversities from '../data/bg-universities.json';
+
+const GRADES = [8, 9, 10, 11, 12];
+const YEARS = [1, 2, 3, 4, 5, 6];
 
 export default function AuthModal({ open, onClose, initialMode = 'login' }) {
   const { login, register } = useAuth();
@@ -11,20 +15,38 @@ export default function AuthModal({ open, onClose, initialMode = 'login' }) {
   // Sync the mode to whichever button opened the modal (Вход → login, Регистрация → signup).
   useEffect(() => { if (open) setMode(initialMode); }, [open, initialMode]);
   const [role, setRole] = useState('student');
+  const [grade, setGrade] = useState('');
+  const [studyYear, setStudyYear] = useState('');
+  const [university, setUniversity] = useState('');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const reset = () => { setError(''); setForm({ name: '', email: '', password: '' }); };
+  const uniNames = useMemo(() => bgUniversities.map((u) => u.nameBg).sort((a, b) => a.localeCompare(b, 'bg')), []);
+
+  const reset = () => {
+    setError('');
+    setForm({ name: '', email: '', password: '' });
+    setGrade(''); setStudyYear(''); setUniversity('');
+  };
   const close = () => { reset(); onClose(); };
 
   const submit = async (e) => {
     e.preventDefault();
     if (!form.email || loading) return;
+    if (mode === 'signup') {
+      if (role === 'student' && !grade) { setError('Избери клас.'); return; }
+      if (role === 'university_student' && (!studyYear || !university)) { setError('Избери курс и университет.'); return; }
+    }
     setError('');
     setLoading(true);
     try {
-      if (mode === 'signup') await register({ name: form.name, email: form.email, password: form.password, role });
+      if (mode === 'signup') await register({
+        name: form.name, email: form.email, password: form.password, role,
+        grade: role === 'student' ? Number(grade) : undefined,
+        studyYear: role === 'university_student' ? Number(studyYear) : undefined,
+        university: role === 'university_student' ? university : undefined,
+      });
       else await login({ email: form.email, password: form.password });
       close();
     } catch (err) {
@@ -63,7 +85,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login' }) {
             {mode === 'signup' && (
               <div className="mt-5">
                 <span className="label">Аз съм</span>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-3 gap-2">
                   {Object.entries(ROLES).map(([key, r]) => (
                     <button
                       key={key} type="button" onClick={() => setRole(key)}
@@ -79,6 +101,36 @@ export default function AuthModal({ open, onClose, initialMode = 'login' }) {
                   ))}
                 </div>
                 <p className="mt-2 text-xs text-forest/50">{ROLES[role].hint}</p>
+
+                {role === 'student' && (
+                  <div className="mt-3">
+                    <span className="label">Клас</span>
+                    <select className="input" value={grade} onChange={(e) => setGrade(e.target.value)} required>
+                      <option value="">Избери клас…</option>
+                      {GRADES.map((g) => <option key={g} value={g}>{g}. клас</option>)}
+                    </select>
+                  </div>
+                )}
+
+                {role === 'university_student' && (
+                  <div className="mt-3 space-y-3">
+                    <div>
+                      <span className="label">Курс</span>
+                      <select className="input" value={studyYear} onChange={(e) => setStudyYear(e.target.value)} required>
+                        <option value="">Избери курс…</option>
+                        {YEARS.map((y) => <option key={y} value={y}>{y}. курс</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <span className="label">Университет</span>
+                      <select className="input" value={university} onChange={(e) => setUniversity(e.target.value)} required>
+                        <option value="">Избери университет…</option>
+                        {uniNames.map((n) => <option key={n} value={n}>{n}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                )}
+
                 {role === 'university' && (
                   <p className="mt-2 flex items-center gap-1.5 rounded-lg border border-accent/20 bg-accent/[0.06] px-3 py-2 text-[11px] text-accent-soft">
                     <Icon.spark size={13} /> Платен план — демо режим, без реално плащане.

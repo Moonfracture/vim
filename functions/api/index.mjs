@@ -51,7 +51,8 @@ const q = (text, params) => getPool().query(text, params);
 
 // Demo accounts that are seeded once and emailed to the user.
 const DEMO = {
-  student: { email: 'student@unikompas.bg', password: 'Uchenik2026!', name: 'Демо Ученик', role: 'student', plan: 'free' },
+  student: { email: 'student@unikompas.bg', password: 'Uchenik2026!', name: 'Демо Ученик', role: 'student', plan: 'free', grade: 12 },
+  universityStudent: { email: 'student-uni@unikompas.bg', password: 'Student2026!', name: 'Демо Студент', role: 'university_student', plan: 'free', studyYear: 2, university: 'Софийски университет „Св. Климент Охридски“' },
   university: { email: 'uni@unikompas.bg', password: 'Universitet2026!', name: 'Демо Университет', role: 'university', plan: 'paid' },
 };
 
@@ -68,6 +69,12 @@ function ensureSchema() {
         plan TEXT NOT NULL DEFAULT 'free',
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       );
+      ALTER TABLE app_users ADD COLUMN IF NOT EXISTS grade SMALLINT;
+      ALTER TABLE app_users ADD COLUMN IF NOT EXISTS study_year SMALLINT;
+      ALTER TABLE app_users ADD COLUMN IF NOT EXISTS university TEXT;
+      ALTER TABLE app_users DROP CONSTRAINT IF EXISTS app_users_role_check;
+      ALTER TABLE app_users ADD CONSTRAINT app_users_role_check
+        CHECK (role IN ('student','university','university_student'));
       CREATE TABLE IF NOT EXISTS favorites (
         user_id INT NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
         uni_key TEXT NOT NULL,
@@ -99,13 +106,14 @@ function ensureSchema() {
         text TEXT NOT NULL,
         created_at TIMESTAMPTZ NOT NULL DEFAULT now()
       );
+      ALTER TABLE community_messages ADD COLUMN IF NOT EXISTS author_detail TEXT;
     `);
-    // Seed the two demo accounts (idempotent).
+    // Seed the demo accounts (idempotent).
     for (const d of Object.values(DEMO)) {
       await q(
-        `INSERT INTO app_users (email, name, role, password_hash, plan)
-         VALUES ($1,$2,$3,$4,$5) ON CONFLICT (email) DO NOTHING`,
-        [d.email, d.name, d.role, hashPassword(d.password), d.plan]
+        `INSERT INTO app_users (email, name, role, password_hash, plan, grade, study_year, university)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8) ON CONFLICT (email) DO NOTHING`,
+        [d.email, d.name, d.role, hashPassword(d.password), d.plan, d.grade ?? null, d.studyYear ?? null, d.university ?? null]
       );
     }
   })();
@@ -164,24 +172,38 @@ function requireAuth(event, roles) {
 // ---------------------------------------------------------------------------
 const isEmail = (s) => typeof s === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
 const clip = (s, n) => String(s ?? '').trim().slice(0, n);
-const publicUser = (r) => ({ id: r.id, email: r.email, name: r.name, role: r.role, plan: r.plan });
+const publicUser = (r) => ({
+  id: r.id, email: r.email, name: r.name, role: r.role, plan: r.plan,
+  grade: r.grade ?? null, studyYear: r.study_year ?? null, university: r.university ?? null,
+});
 
 // ---------------------------------------------------------------------------
 // Account actions
 // ---------------------------------------------------------------------------
-async function register({ email, password, name, role }) {
+async function register({ email, password, name, role, grade, studyYear, university }) {
   email = clip(email, 200).toLowerCase();
   if (!isEmail(email)) throw new HttpError(400, 'Невалиден имейл.');
   if (typeof password !== 'string' || password.length < 6) throw new HttpError(400, 'Паролата трябва да е поне 6 знака.');
-  if (role !== 'student' && role !== 'university') throw new HttpError(400, 'Невалидна роля.');
+  if (!['student', 'university', 'university_student'].includes(role)) throw new HttpError(400, 'Невалидна роля.');
+
+  let gradeVal = null, yearVal = null, uniVal = null;
+  if (role === 'student') {
+    gradeVal = Number(grade);
+    if (!Number.isInteger(gradeVal) || gradeVal < 8 || gradeVal > 12) throw new HttpError(400, 'Изберете клас от 8 до 12.');
+  } else if (role === 'university_student') {
+    yearVal = Number(studyYear);
+    if (!Number.isInteger(yearVal) || yearVal < 1 || yearVal > 6) throw new HttpError(400, 'Изберете курс от 1 до 6.');
+    uniVal = clip(university, 200);
+    if (!uniVal) throw new HttpError(400, 'Изберете университет.');
+  }
   const plan = role === 'university' ? 'paid' : 'free';
   const displayName = clip(name, 120) || email.split('@')[0];
   let row;
   try {
     ({ rows: [row] } = await q(
-      `INSERT INTO app_users (email, name, role, password_hash, plan)
-       VALUES ($1,$2,$3,$4,$5) RETURNING id, email, name, role, plan`,
-      [email, displayName, role, hashPassword(password), plan]
+      `INSERT INTO app_users (email, name, role, password_hash, plan, grade, study_year, university)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING id, email, name, role, plan, grade, study_year, university`,
+      [email, displayName, role, hashPassword(password), plan, gradeVal, yearVal, uniVal]
     ));
   } catch (e) {
     if (e.code === '23505') throw new HttpError(409, 'Профил с този имейл вече съществува.');
@@ -201,7 +223,7 @@ async function login({ email, password }) {
 
 async function me(event) {
   const auth = requireAuth(event);
-  const { rows: [row] } = await q(`SELECT id, email, name, role, plan FROM app_users WHERE id = $1`, [auth.uid]);
+  const { rows: [row] } = await q(`SELECT id, email, name, role, plan, grade, study_year, university FROM app_users WHERE id = $1`, [auth.uid]);
   if (!row) throw new HttpError(401, 'Профилът не е намерен.');
   return { user: publicUser(row) };
 }
@@ -218,7 +240,7 @@ async function favoritesList(event) {
   return { favorites: rows.map((r) => ({ key: r.uni_key, name: r.uni_name, country: r.uni_country })) };
 }
 async function favoriteToggle(event, { uniKey, uniName, uniCountry }) {
-  const u = requireAuth(event, ['student']);
+  const u = requireAuth(event, ['student', 'university_student']);
   const key = clip(uniKey, 200);
   if (!key) throw new HttpError(400, 'Липсва университет.');
   const { rowCount } = await q(`DELETE FROM favorites WHERE user_id = $1 AND uni_key = $2`, [u.uid, key]);
@@ -264,7 +286,7 @@ async function postCreate(event, { title, body }) {
   return { post: { id: row.id, authorName: row.author_name, title: row.title, body: row.body, createdAt: row.created_at, likeCount: 0, likedByMe: false } };
 }
 async function postLikeToggle(event, { postId }) {
-  const u = requireAuth(event, ['student']);
+  const u = requireAuth(event, ['student', 'university_student']);
   const id = Number(postId);
   if (!Number.isInteger(id)) throw new HttpError(400, 'Невалидна публикация.');
   const { rowCount } = await q(`DELETE FROM post_likes WHERE post_id = $1 AND user_id = $2`, [id, u.uid]);
@@ -285,26 +307,32 @@ async function communityList(_event, { channel }) {
   const ch = clip(channel, 40);
   if (!ch) throw new HttpError(400, 'Липсва канал.');
   const { rows } = await q(
-    `SELECT m.id, m.author_name, m.author_role, m.text, m.created_at
+    `SELECT m.id, m.author_name, m.author_role, m.author_detail, m.text, m.created_at
        FROM community_messages m WHERE m.channel = $1 ORDER BY m.created_at ASC LIMIT 200`,
     [ch]
   );
   return { messages: rows.map((r) => ({
-    id: r.id, authorName: r.author_name, authorRole: r.author_role, text: r.text, createdAt: r.created_at,
+    id: r.id, authorName: r.author_name, authorRole: r.author_role, authorDetail: r.author_detail,
+    text: r.text, createdAt: r.created_at,
   })) };
 }
 async function communityPost(event, { channel, text }) {
-  const u = requireAuth(event, ['student']);
+  const u = requireAuth(event, ['student', 'university_student']);
   const ch = clip(channel, 40);
   const body = clip(text, 1000);
   if (!ch) throw new HttpError(400, 'Липсва канал.');
   if (!body) throw new HttpError(400, 'Съобщението не може да е празно.');
+  // Pull the poster's grade/university to label the message (ученик → "12 клас", студент → uni).
+  const { rows: [meta] } = await q(`SELECT grade, university FROM app_users WHERE id = $1`, [u.uid]);
+  let detail = null;
+  if (u.role === 'student' && meta?.grade != null) detail = `${meta.grade} клас`;
+  else if (u.role === 'university_student' && meta?.university) detail = meta.university;
   const { rows: [row] } = await q(
-    `INSERT INTO community_messages (channel, user_id, author_name, author_role, text)
-     VALUES ($1,$2,$3,$4,$5) RETURNING id, author_name, author_role, text, created_at`,
-    [ch, u.uid, clip(u.name, 120), u.role, body]
+    `INSERT INTO community_messages (channel, user_id, author_name, author_role, author_detail, text)
+     VALUES ($1,$2,$3,$4,$5,$6) RETURNING id, author_name, author_role, author_detail, text, created_at`,
+    [ch, u.uid, clip(u.name, 120), u.role, detail, body]
   );
-  return { message: { id: row.id, authorName: row.author_name, authorRole: row.author_role, text: row.text, createdAt: row.created_at } };
+  return { message: { id: row.id, authorName: row.author_name, authorRole: row.author_role, authorDetail: row.author_detail, text: row.text, createdAt: row.created_at } };
 }
 
 // ---------------------------------------------------------------------------
@@ -338,7 +366,7 @@ function buildPrompt(context) {
 }
 
 async function chat(event, { question, context, history }) {
-  requireAuth(event, ['student']);
+  requireAuth(event, ['student', 'university_student']);
   if (!process.env.OPENKBS_API_KEY) return { reply: 'AI асистентът не е конфигуриран (липсва ключ).' };
 
   const uniNames = (context?.universities || []).map((u) => u.name).join(', ') || 'няма';

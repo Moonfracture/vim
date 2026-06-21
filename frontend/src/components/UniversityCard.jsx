@@ -4,7 +4,7 @@ import { Icon, Flag } from '../lib/icons.jsx';
 import { CRITERIA_BY_ID } from '../lib/scoring.js';
 import { schemeForField } from '../lib/baloobrazuvane.js';
 import { fmtMoney, fmtRange } from '../lib/currency.js';
-import { useAuth } from '../context/AuthContext.jsx';
+import { canEngage, useAuth } from '../context/AuthContext.jsx';
 
 // Official site if known, else a web search for it — every card stays clickable.
 const websiteHref = (d) =>
@@ -81,7 +81,7 @@ function UniBody({ data, topCriteria, field }) {
         >
           <Icon.globe size={12} /> {data.website ? 'Сайт' : 'Търси сайт'}
         </a>
-        {user?.role === 'student' && (
+        {canEngage(user?.role) && (
           <button
             type="button"
             onClick={() => toggleFavorite({ key: data.name, name: data.name, country: data.country })}

@@ -24,6 +24,13 @@ export default function Profile() {
 
   const role = ROLES[user.role];
   const isStudent = user.role === 'student';
+  const isUniStudent = user.role === 'university_student';
+  const canFavorite = isStudent || isUniStudent;
+  const detail = isStudent && user.grade != null
+    ? `${user.grade}. клас`
+    : isUniStudent
+      ? [user.studyYear != null ? `${user.studyYear}. курс` : null, user.university].filter(Boolean).join(' · ')
+      : null;
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-12">
@@ -47,6 +54,11 @@ export default function Profile() {
               <span className="chip py-0.5 text-[11px]">
                 <Icon.spark size={12} /> {role?.plan}
               </span>
+              {detail && (
+                <span className="chip py-0.5 text-[11px]">
+                  <Icon.cap size={12} /> {detail}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -63,7 +75,7 @@ export default function Profile() {
         </div>
       </motion.div>
 
-      {isStudent && (
+      {canFavorite && (
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}

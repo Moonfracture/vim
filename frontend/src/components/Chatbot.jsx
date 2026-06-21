@@ -1,12 +1,12 @@
 import { useRef, useState, useEffect } from 'react';
 import { Icon } from '../lib/icons.jsx';
 import { callApi } from '../lib/api.js';
-import { useAuth } from '../context/AuthContext.jsx';
+import { canEngage, useAuth } from '../context/AuthContext.jsx';
 
 // Chatbot that analyzes the current result cards via Gemini (backend proxy).
 export default function Chatbot({ context }) {
   const { user } = useAuth();
-  const isStudent = user?.role === 'student';
+  const isStudent = canEngage(user?.role);
   const [messages, setMessages] = useState([
     { role: 'assistant', text: 'Здравей! Анализирах резултатите. Питай ме например: „Има ли смисъл да уча в чужбина?“ или „Кой е най-евтиният вариант?“' },
   ]);

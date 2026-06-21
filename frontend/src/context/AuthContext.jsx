@@ -6,8 +6,12 @@ const USER_KEY = 'unikompas.user';
 
 export const ROLES = {
   student: { label: 'Ученик', hint: 'Търси, сравнява и пита AI асистента', plan: 'Безплатен' },
+  university_student: { label: 'Студент', hint: 'Споделя опит и помага на кандидатите', plan: 'Безплатен' },
   university: { label: 'Университет', hint: 'Публикува в „Университети“', plan: 'Платен план' },
 };
+
+// Both pupil and university student have the same engagement permissions.
+export const canEngage = (role) => role === 'student' || role === 'university_student';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
@@ -39,7 +43,7 @@ export function AuthProvider({ children }) {
       try {
         const { user: u } = await callApi('me');
         setUser(u);
-        if (u?.role === 'student') loadFavorites();
+        if (canEngage(u?.role)) loadFavorites();
       } catch {
         // token invalid/expired — sign out
         setToken(''); setUser(null);
@@ -50,12 +54,12 @@ export function AuthProvider({ children }) {
   const adopt = (res) => {
     setToken(res.token);
     setUser(res.user);
-    if (res.user?.role === 'student') loadFavorites(); else setFavorites([]);
+    if (canEngage(res.user?.role)) loadFavorites(); else setFavorites([]);
     return res.user;
   };
 
-  const register = async ({ name, email, password, role }) =>
-    adopt(await callApi('register', { name, email, password, role }));
+  const register = async ({ name, email, password, role, grade, studyYear, university }) =>
+    adopt(await callApi('register', { name, email, password, role, grade, studyYear, university }));
   const login = async ({ email, password }) =>
     adopt(await callApi('login', { email, password }));
   const logout = () => { setToken(''); setUser(null); setFavorites([]); };
@@ -64,7 +68,7 @@ export function AuthProvider({ children }) {
 
   // optimistic toggle; reconciles with the server response
   const toggleFavorite = useCallback(async (uni) => {
-    if (user?.role !== 'student') return;
+    if (!canEngage(user?.role)) return;
     const key = uni.key;
     const existed = favorites.some((f) => f.key === key);
     setFavorites((prev) => existed ? prev.filter((f) => f.key !== key)

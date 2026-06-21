@@ -45,7 +45,7 @@ export default function Community() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef(null);
 
-  const isStudent = user?.role === 'student';
+  const canPost = user?.role === 'student' || user?.role === 'university_student';
   const isUni = user?.role === 'university';
 
   const load = async (channel) => {
@@ -63,7 +63,7 @@ export default function Community() {
 
   const send = async () => {
     const text = input.trim();
-    if (!text || !isStudent || sending) return;
+    if (!text || !canPost || sending) return;
     setSending(true);
     try {
       const { message } = await callApi('community.post', { channel: active, text });
@@ -135,6 +135,7 @@ export default function Community() {
                 key={m.id}
                 from={m.authorName}
                 role={m.authorRole}
+                detail={m.authorDetail}
                 text={m.text}
                 t={fmtTime(m.createdAt)}
                 mine={user && m.authorName === user.name}
@@ -161,7 +162,7 @@ export default function Community() {
             </div>
           )}
 
-          {isStudent && (
+          {canPost && (
             <div className="flex items-center gap-2 border-t border-forest/10 p-3">
               <input
                 className="input"
@@ -181,20 +182,21 @@ export default function Community() {
   );
 }
 
-function Bubble({ from, role, text, t, mine }) {
+function Bubble({ from, role, detail, text, t, mine }) {
   return (
     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[80%] ${mine ? 'items-end text-right' : ''}`}>
-        <div className="mb-1 flex items-center gap-2 text-[11px] text-forest/50">
+        <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] text-forest/50">
           {!mine && <RoleDot role={role} />}
           <span>{from}</span>
+          {detail && <span className="text-forest/40">· {detail}</span>}
           {t && <span className="text-forest/40">· {t}</span>}
         </div>
         <div
           className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
             mine
               ? 'bg-accent text-white'
-              : role === 'student'
+              : (role === 'student' || role === 'university_student')
                 ? 'border border-accent/20 bg-accent/[0.06] text-forest-ink'
                 : 'border border-forest/10 bg-ink-850 text-forest-ink'
           }`}
@@ -207,12 +209,13 @@ function Bubble({ from, role, text, t, mine }) {
 }
 
 function RoleDot({ role }) {
-  const isStudent = role === 'student';
+  const label = role === 'student' ? 'ученик' : role === 'university_student' ? 'студент' : 'кандидат';
+  const highlight = role === 'student' || role === 'university_student';
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-      isStudent ? 'bg-accent/15 text-accent-soft' : 'bg-forest/10 text-forest/60'
+      highlight ? 'bg-accent/15 text-accent-soft' : 'bg-forest/10 text-forest/60'
     }`}>
-      {isStudent ? 'студент' : 'кандидат'}
+      {label}
     </span>
   );
 }

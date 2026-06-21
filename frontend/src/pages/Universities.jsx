@@ -1,168 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
-import { useAuth } from '../context/AuthContext.jsx';
+import { canEngage, useAuth } from '../context/AuthContext.jsx';
 import { callApi } from '../lib/api.js';
+import bgUniversities from '../data/bg-universities.json';
+import fieldsData from '../data/fields.json';
 
-// Static showcase profiles (curated). Specs mirror the BG_META set in scripts/build-data.mjs.
-const SEED = [
-  {
-    id: 'su',
-    name: 'Софийски университет „Св. Климент Охридски“',
-    city: 'София',
-    founded: 1888,
-    fields: ['Компютърни науки', 'Право', 'Природни науки', 'Хуманитарни науки', 'Социални науки'],
-    balo: 'Признават се матури; за Информатика (ФМИ) математика с коеф. 2.5 + оценки от диплома',
-    tuition: '~700–4500 лв./год.',
-    hue: 'from-emerald-500/30 to-green-600/20',
-    blurb: 'Най-старият български университет — 16 факултета, силни природни и хуманитарни науки.',
-    achievements: ['№1 в България (Scimago)', 'Над 20 000 студенти', 'Партньор по 600+ Еразъм програми'],
-    photos: ['Ректорат', 'Библиотека', 'Аула'],
-  },
-  {
-    id: 'tu',
-    name: 'Технически университет — София',
-    city: 'София',
-    founded: 1945,
-    fields: ['Инженерство', 'Компютърни науки'],
-    balo: 'Матура/изпит по математика (до 3×) + оценки от диплома',
-    tuition: '~800–4000 лв./год.',
-    hue: 'from-teal-500/30 to-emerald-600/20',
-    blurb: 'Водещ инженерен университет с фокус върху IT, електроника и роботика.',
-    achievements: ['Най-добра инженерна школа', 'Лаборатории с индустрията', 'Високи нива на реализация'],
-    photos: ['Кампус', 'Лаборатория', 'Хакатон'],
-  },
-  {
-    id: 'unwe',
-    name: 'Университет за национално и световно стопанство',
-    city: 'София',
-    founded: 1920,
-    fields: ['Бизнес и икономика', 'Право', 'Социални науки'],
-    balo: 'Единен приемен изпит или матура (математика/БЕЛ) + оценки от диплома',
-    tuition: '~700–3800 лв./год.',
-    hue: 'from-amber-500/30 to-orange-600/20',
-    blurb: 'Най-големият икономически университет в Югоизточна Европа — финанси, мениджмънт и право.',
-    achievements: ['Над 18 000 студенти', 'Силна мрежа с бизнеса', 'Международни акредитации'],
-    photos: ['Корпус', 'Аула Максима', 'Библиотека'],
-  },
-  {
-    id: 'nbu',
-    name: 'Нов български университет',
-    city: 'София',
-    founded: 1991,
-    fields: ['Бизнес и икономика', 'Социални науки', 'Изкуства и дизайн', 'Хуманитарни науки'],
-    balo: 'По документи и/или тест; матурите се признават',
-    tuition: '~2900–5500 лв./год.',
-    hue: 'from-rose-500/30 to-pink-600/20',
-    blurb: 'Частен университет с либерално образование, изкуства, дизайн и социални науки.',
-    achievements: ['Гъвкави програми', 'Силно портфолио в изкуствата', 'Международен обмен'],
-    photos: ['Кампус', 'Галерия', 'Студио'],
-  },
-  {
-    id: 'pu',
-    name: 'Пловдивски университет „Паисий Хилендарски“',
-    city: 'Пловдив',
-    founded: 1961,
-    fields: ['Компютърни науки', 'Природни науки', 'Хуманитарни науки', 'Социални науки'],
-    balo: 'Матури и/или кандидатстудентски изпити според специалността',
-    tuition: '~700–3500 лв./год.',
-    hue: 'from-teal-500/30 to-cyan-600/20',
-    blurb: 'Вторият по големина университет в страната — широк спектър от природни и хуманитарни науки.',
-    achievements: ['Силен ФМИ', 'Регионален научен център', 'Активни Еразъм програми'],
-    photos: ['Ректорат', 'Лаборатория', 'Кампус'],
-  },
-  {
-    id: 'mu-sofia',
-    name: 'Медицински университет — София',
-    city: 'София',
-    founded: 1917,
-    fields: ['Медицина'],
-    balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42',
-    tuition: '~900–8000 лв./год.',
-    hue: 'from-red-500/30 to-rose-600/20',
-    blurb: 'Водещ медицински университет — медицина, дентална медицина и фармация.',
-    achievements: ['Топ медицинска школа', 'Университетски болници', 'Програми на английски'],
-    photos: ['Клиника', 'Аудитория', 'Лаборатория'],
-  },
-  {
-    id: 'mu-varna',
-    name: 'Медицински университет — Варна',
-    city: 'Варна',
-    founded: 1961,
-    fields: ['Медицина'],
-    balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42',
-    tuition: '~900–8000 лв./год.',
-    hue: 'from-emerald-500/30 to-teal-600/20',
-    blurb: 'Обучение по медицина, дентална медицина и фармация с международни студенти.',
-    achievements: ['Програми на английски', 'Модерна симулационна болница', 'Топ 3 в страната'],
-    photos: ['Клиника', 'Аудитория', 'Лаборатория'],
-  },
-  {
-    id: 'mu-plovdiv',
-    name: 'Медицински университет — Пловдив',
-    city: 'Пловдив',
-    founded: 1945,
-    fields: ['Медицина'],
-    balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42',
-    tuition: '~900–8000 лв./год.',
-    hue: 'from-emerald-500/30 to-green-600/20',
-    blurb: 'Медицина, дентална медицина и фармация с модерна симулационна база.',
-    achievements: ['Симулационен тренировъчен център', 'Международни студенти', 'Силна клинична практика'],
-    photos: ['Клиника', 'Симулации', 'Аудитория'],
-  },
-  {
-    id: 'uacg',
-    name: 'Университет по архитектура, строителство и геодезия',
-    city: 'София',
-    founded: 1942,
-    fields: ['Инженерство', 'Изкуства и дизайн'],
-    balo: 'Изпит по математика + изпит по рисуване (за архитектура) + диплома',
-    tuition: '~800–4000 лв./год.',
-    hue: 'from-green-500/30 to-teal-600/20',
-    blurb: 'Специализиран в архитектура, строително инженерство и геодезия.',
-    achievements: ['Единствен профилиран в страната', 'Силна проектантска база', 'Признати архитекти'],
-    photos: ['Корпус', 'Ателие', 'Макетна зала'],
-  },
-  {
-    id: 'uctm',
-    name: 'Химикотехнологичен и металургичен университет',
-    city: 'София',
-    founded: 1953,
-    fields: ['Инженерство', 'Природни науки'],
-    balo: 'Изпит/матура по математика или химия + оценки от диплома',
-    tuition: '~800–3800 лв./год.',
-    hue: 'from-lime-500/30 to-emerald-600/20',
-    blurb: 'Инженерна химия, материалознание, биотехнологии и металургия.',
-    achievements: ['Индустриални партньорства', 'Изследователски лаборатории', 'Висока реализация'],
-    photos: ['Лаборатория', 'Кампус', 'Реактор'],
-  },
-  {
-    id: 'ru',
-    name: 'Русенски университет „Ангел Кънчев“',
-    city: 'Русе',
-    founded: 1945,
-    fields: ['Инженерство', 'Компютърни науки', 'Бизнес и икономика'],
-    balo: 'Матура/изпит по математика или БЕЛ + оценки от диплома',
-    tuition: '~700–3500 лв./год.',
-    hue: 'from-cyan-500/30 to-blue-600/20',
-    blurb: 'Дунавски университет с инженерство, IT и икономика и силен международен обмен.',
-    achievements: ['Трансгранични програми', 'Модерни лаборатории', 'Активни Еразъм партньори'],
-    photos: ['Кампус', 'Лаборатория', 'Библиотека'],
-  },
-  {
-    id: 'tu-varna',
-    name: 'Технически университет — Варна',
-    city: 'Варна',
-    founded: 1962,
-    fields: ['Инженерство', 'Компютърни науки'],
-    balo: 'Матура/изпит по математика + оценки от диплома',
-    tuition: '~800–3800 лв./год.',
-    hue: 'from-blue-500/30 to-sky-600/20',
-    blurb: 'Морско, електро- и машинно инженерство и компютърни технологии край морето.',
-    achievements: ['Силна морска подготовка', 'Индустриални стажове', 'Регионален IT център'],
-    photos: ['Кампус', 'Лаборатория', 'Симулатор'],
-  },
-];
+const FIELDS = fieldsData.fields;
 
 const fmtDate = (iso) => {
   try { return new Date(iso).toLocaleDateString('bg-BG', { day: 'numeric', month: 'short' }); }
@@ -172,7 +16,7 @@ const fmtDate = (iso) => {
 export default function Universities() {
   const { user } = useAuth();
   const isUni = user?.role === 'university';
-  const isStudent = user?.role === 'student';
+  const isStudent = canEngage(user?.role);
   const [posts, setPosts] = useState([]);
 
   const load = async () => {
@@ -236,16 +80,70 @@ export default function Universities() {
         )}
       </section>
 
-      {/* Static showcase */}
-      <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-forest-ink">
-        <Icon.cap size={18} className="text-accent-soft" /> Профили
-      </h2>
-      <div className="grid gap-6 lg:grid-cols-3">
-        {SEED.map((u, i) => (
-          <UniCard key={u.id} uni={u} delay={0.04 * i} />
-        ))}
-      </div>
+      <Directory />
     </div>
+  );
+}
+
+function Directory() {
+  const [q, setQ] = useState('');
+  const [field, setField] = useState('');
+
+  const list = useMemo(() => {
+    const needle = q.trim().toLowerCase();
+    return bgUniversities.filter((u) => {
+      if (field && !u.fields.includes(field)) return false;
+      if (!needle) return true;
+      return (
+        u.nameBg.toLowerCase().includes(needle) ||
+        (u.city && u.city.toLowerCase().includes(needle))
+      );
+    });
+  }, [q, field]);
+
+  return (
+    <section>
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <h2 className="flex items-center gap-2 font-display text-xl font-bold text-forest-ink">
+          <Icon.cap size={18} className="text-accent-soft" /> Всички университети
+          <span className="text-sm font-normal text-forest/50">({bgUniversities.length})</span>
+        </h2>
+        <p className="text-xs text-forest/50">Източник: РСВУ 2025 (МОН)</p>
+      </div>
+
+      {/* filter bar */}
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <Icon.search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-forest/40" />
+          <input
+            className="input pl-9"
+            placeholder="Търси по име или град…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+          />
+        </div>
+        <select
+          className="input sm:w-64"
+          value={field}
+          onChange={(e) => setField(e.target.value)}
+        >
+          <option value="">Всички направления</option>
+          {FIELDS.map((f) => (
+            <option key={f} value={f}>{f}</option>
+          ))}
+        </select>
+      </div>
+
+      {list.length === 0 ? (
+        <div className="glass p-8 text-center text-sm text-forest/70">Няма университети по този филтър.</div>
+      ) : (
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {list.map((u, i) => (
+            <UniCard key={u.key} uni={u} delay={Math.min(0.03 * i, 0.3)} />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -341,7 +239,7 @@ function PostCard({ post, canLike, onChange }) {
               : 'bg-forest/[0.06] text-forest/60 ring-1 ring-forest/10'
           } ${canLike ? 'hover:text-forest-ink' : 'cursor-default'}`}
           aria-pressed={post.likedByMe}
-          title={canLike ? '' : 'Само ученици могат да харесват'}
+          title={canLike ? '' : 'Само ученици и студенти могат да харесват'}
         >
           <Icon.heart size={14} className={post.likedByMe ? 'fill-current' : ''} /> {post.likeCount}
         </button>
@@ -352,63 +250,124 @@ function PostCard({ post, canLike, onChange }) {
 }
 
 function UniCard({ uni, delay }) {
+  const [open, setOpen] = useState(false);
+
+  // group specialties by their official РСВУ field for the expanded view
+  const byField = useMemo(() => {
+    const m = new Map();
+    for (const s of uni.specialties) {
+      if (!m.has(s.field)) m.set(s.field, []);
+      m.get(s.field).push(s);
+    }
+    return [...m.entries()];
+  }, [uni.specialties]);
+
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95, y: 12 }}
+      initial={{ opacity: 0, scale: 0.97, y: 12 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
-      className="glass glass-hover flex flex-col overflow-hidden"
+      transition={{ duration: 0.45, delay, ease: [0.22, 1, 0.36, 1] }}
+      className="glass glass-hover flex flex-col p-5"
     >
-      <div className={`relative h-28 bg-gradient-to-br ${uni.hue}`}>
-        <div className="absolute inset-0 grid place-items-center text-forest/25">
-          <Icon.cap size={40} />
-        </div>
-        <span className="absolute left-4 top-4 chip bg-forest/80 text-white backdrop-blur">
-          <Icon.pin size={12} /> {uni.city}
+      <div className="flex items-start gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-accent/15 text-accent-soft ring-1 ring-accent/30">
+          <Icon.cap size={20} />
         </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display text-[15px] font-bold leading-tight text-forest-ink">{uni.nameBg}</h3>
+          <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-forest/60">
+            {uni.city && <span className="flex items-center gap-1"><Icon.pin size={11} className="text-accent-soft" /> {uni.city}</span>}
+            {uni.founded && <span className="flex items-center gap-1"><Icon.cap size={11} className="text-accent-soft" /> осн. {uni.founded}</span>}
+            {uni.nationalRank && <span className="flex items-center gap-1"><Icon.trophy size={11} className="text-accent-soft" /> №{uni.nationalRank} в BG</span>}
+          </div>
+        </div>
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-base font-bold leading-tight text-forest-ink">{uni.name}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-forest/70">{uni.blurb}</p>
+      {uni.fields.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {uni.fields.map((f) => (
+            <span key={f} className="chip py-0.5 text-[11px]">{f}</span>
+          ))}
+        </div>
+      )}
 
-        <div className="mt-4 space-y-2.5">
-          <div className="flex items-center gap-2 text-xs text-forest/70">
-            <Icon.cap size={13} className="shrink-0 text-accent-soft" /> осн. {uni.founded}
-          </div>
-          <div className="flex flex-wrap gap-1.5">
-            {uni.fields.map((f) => (
-              <span key={f} className="chip py-0.5 text-[11px]">{f}</span>
+      {uni.crosswalked && (uni.balo || uni.tuitionMin != null) && (
+        <div className="mt-4 space-y-2">
+          {uni.tuitionMin != null && (
+            <div className="flex items-center gap-2 text-xs text-forest/70">
+              <Icon.coin size={13} className="shrink-0 text-accent-soft" />
+              Такса: ~{uni.tuitionMin.toLocaleString('bg-BG')}–{uni.tuitionMax.toLocaleString('bg-BG')} USD/год.
+            </div>
+          )}
+          {uni.balo && (
+            <div className="flex items-start gap-2 text-[11px] leading-relaxed text-forest/50">
+              <Icon.calc size={13} className="mt-0.5 shrink-0 text-accent-soft" />
+              <span><span className="font-semibold text-forest/60">Балообразуване: </span>{uni.balo}</span>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* specialties */}
+      <div className="mt-4 flex-1">
+        <button
+          onClick={() => setOpen((o) => !o)}
+          className="flex w-full items-center justify-between rounded-lg bg-forest/[0.05] px-3 py-2 text-left text-xs font-semibold text-forest/70 ring-1 ring-forest/10 transition-colors hover:text-forest-ink"
+        >
+          <span>{uni.specialtyCount} специалности</span>
+          <Icon.arrow size={14} className={`transition-transform ${open ? '-rotate-90' : 'rotate-90'}`} />
+        </button>
+        {open && (
+          <div className="mt-2 max-h-64 space-y-3 overflow-y-auto pr-1">
+            {byField.map(([f, specs]) => (
+              <div key={f}>
+                <p className="text-[11px] font-semibold uppercase tracking-wide text-accent-soft">{f}</p>
+                <ul className="mt-1 space-y-1">
+                  {specs.map((s, i) => (
+                    <li key={i} className="flex items-start justify-between gap-2 text-xs text-forest/70">
+                      <span>{s.name}</span>
+                      {s.degrees.length > 0 && (
+                        <span className="shrink-0 text-[10px] text-forest/40">{s.degrees.join(' · ')}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ))}
           </div>
-          <div className="flex items-center gap-2 text-xs text-forest/70">
-            <Icon.coin size={13} className="shrink-0 text-accent-soft" /> Такса: {uni.tuition}
-          </div>
-          <div className="flex items-start gap-2 text-[11px] leading-relaxed text-forest/50">
-            <Icon.calc size={13} className="mt-0.5 shrink-0 text-accent-soft" />
-            <span><span className="font-semibold text-forest/60">Балообразуване: </span>{uni.balo}</span>
-          </div>
-        </div>
-
-        <p className="mt-4 text-[11px] uppercase tracking-wider text-forest/50">Галерия</p>
-        <div className="mt-2 flex flex-wrap gap-2">
-          {uni.photos.map((p, i) => (
-            <span key={i} className="flex h-12 w-16 items-center justify-center rounded-lg bg-forest/[0.06] text-center text-[10px] text-forest/60 ring-1 ring-forest/10">
-              {p}
-            </span>
-          ))}
-        </div>
-
-        <p className="mt-4 text-[11px] uppercase tracking-wider text-forest/50">Постижения</p>
-        <ul className="mt-2 space-y-1.5">
-          {uni.achievements.map((a, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-forest/70">
-              <span className="mt-0.5 text-accent-soft"><Icon.trophy size={13} /></span>
-              <span>{a}</span>
-            </li>
-          ))}
-        </ul>
+        )}
       </div>
+
+      {/* joint programs */}
+      {uni.jointPrograms.length > 0 && (
+        <div className="mt-4 border-t border-forest/10 pt-3">
+          <p className="flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-forest/50">
+            <Icon.globe size={12} className="text-accent-soft" /> Съвместни програми ({uni.jointPrograms.length})
+          </p>
+          <ul className="mt-1.5 space-y-1">
+            {uni.jointPrograms.slice(0, 3).map((j, i) => (
+              <li key={i} className="text-[11px] leading-relaxed text-forest/60">
+                <span className="text-forest/70">{j.specialties || j.field}</span>
+                {j.country && <span className="text-forest/40"> · {j.country}</span>}
+              </li>
+            ))}
+            {uni.jointPrograms.length > 3 && (
+              <li className="text-[11px] text-forest/40">+ още {uni.jointPrograms.length - 3}</li>
+            )}
+          </ul>
+        </div>
+      )}
+
+      {uni.website && (
+        <a
+          href={uni.website}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-accent-soft hover:underline"
+        >
+          <Icon.globe size={13} /> Официален сайт
+        </a>
+      )}
     </motion.div>
   );
 }
