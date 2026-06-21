@@ -27,6 +27,10 @@ export default function Calculator() {
     setRows(p.rows.map((r) => ({ ...r, grade: '' })));
   };
   const setRow = (i, patch) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, ...patch } : r)));
+  const setGrade = (i, raw) => {
+    const n = parseFloat(String(raw).replace(',', '.'));
+    setRow(i, { grade: Number.isFinite(n) && n > 6 ? '6' : raw });
+  };
   const removeRow = (i) => setRows((rs) => rs.filter((_, j) => j !== i));
   const addRow = () => setRows((rs) => [...rs, { label: 'Нов компонент', coef: 1, grade: '' }]);
 
@@ -105,7 +109,7 @@ export default function Calculator() {
                   type="number" min="2" max="6" step="0.01" inputMode="decimal"
                   className="w-20 rounded-lg border border-forest/15 bg-ink-900 px-2 py-2 text-center text-sm text-forest-ink outline-none focus:border-accent/60"
                   value={r.grade}
-                  onChange={(e) => setRow(i, { grade: e.target.value })}
+                  onChange={(e) => setGrade(i, e.target.value)}
                   placeholder="—"
                 />
                 <input
