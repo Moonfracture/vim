@@ -55,17 +55,23 @@
 а не машинно самообучение.
 
 ## 7. What Datasets Do You Use, and How?
-- **World University Rankings 2026** (`world_university_rankings_2026.csv` + THE World University
-  Rankings 2016–2026, `the_rankings_2026.csv`). Защо: качество/рейтинг на чуждите университети за
-  картите за сравнение. Какво направихме: парснахме CSV, извадихме ранг/държава/точки, нормализирахме
-  имената и разширихме пула до ~750 училища.
-- **Tuition Fees 50 Countries** (`tuition_fees_50_countries.csv`). Защо: реални такси по държави за
-  въпроса „струва ли си чужбина". Какво: парснахме, свързахме по държава, конвертирахме в местна валута.
-- **Scimago Institutions Rankings — Bulgaria** (`scimago_bgr.csv`, scimagoir.com). Защо: базовата
-  линия за България (централната карта). Какво: извлякохме българските институции и техния ранг.
-- **Cost of Living** (`cost-of-living_v2.csv`). Защо: реална месечна издръжка по градове. Какво:
-  парснахме и съпоставихме градовете към университетите.
-- **РСВУ 2025 (МОН)** — rsvu.mon.bg, 3 официални PDF: списък на специалностите (3 854 записа / 51
+- **World University Rankings 2026 — QS & THE & ARWU**
+  (https://www.kaggle.com/datasets/alitaqishah/world-university-rankings-2026-qs-and-the-and-arwu) —
+  `world_university_rankings_2026.csv` (+ допълнително THE World University Rankings 2016–2026,
+  `the_rankings_2026.csv`). Защо: качество/рейтинг на чуждите университети за картите за сравнение.
+  Какво направихме: парснахме CSV, извадихме ранг/държава/точки, нормализирахме имената и разширихме
+  пула до ~750 училища.
+- **Tuition Fees 50 Countries**
+  (https://www.kaggle.com/datasets/kathrinaroldan/global-tuition-fees-and-education-trends-2024) —
+  `tuition_fees_50_countries.csv`. Защо: реални такси по държави за въпроса „струва ли си чужбина".
+  Какво: парснахме, свързахме по държава, конвертирахме в местна валута.
+- **Scimago Institutions Rankings — Bulgaria** (https://www.scimagoir.com) — `scimago_bgr.csv`.
+  Защо: базовата линия за България (централната карта). Какво: извлякохме българските институции и
+  техния ранг.
+- **Global Cost of Living** (https://www.kaggle.com/datasets/mvieira101/global-cost-of-living) —
+  `cost-of-living_v2.csv`. Защо: реална месечна издръжка по градове. Какво: парснахме и съпоставихме
+  градовете към университетите.
+- **РСВУ 2025 (МОН)** — https://rsvu.mon.bg, 3 официални PDF: списък на специалностите (3 854 записа / 51
   университета), активни съвместни програми с чужди ВУ, нагласи на работодателите. Защо: пълен
   каталог на всички акредитирани български университети и специалности. Какво: написахме grid-парсер
   (`parse-rsvu.mjs`), който чете таблиците от PDF по координатите на клетките, извади 3 854
