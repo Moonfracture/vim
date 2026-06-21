@@ -58,6 +58,7 @@
 - **World University Rankings 2026 — QS & THE & ARWU**
   (https://www.kaggle.com/datasets/alitaqishah/world-university-rankings-2026-qs-and-the-and-arwu) —
   `world_university_rankings_2026.csv` (+ допълнително THE World University Rankings 2016–2026,
+  https://www.kaggle.com/datasets/raymondtoo/the-world-university-rankings-2016-2024 ,
   `the_rankings_2026.csv`). Защо: качество/рейтинг на чуждите университети за картите за сравнение.
   Какво направихме: парснахме CSV, извадихме ранг/държава/точки, нормализирахме имената и разширихме
   пула до ~750 училища.
