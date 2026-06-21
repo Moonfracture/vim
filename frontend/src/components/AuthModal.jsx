@@ -41,7 +41,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login' }) {
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         >
-          <div className="absolute inset-0 bg-ink-950/80 backdrop-blur-sm" onClick={close} />
+          <div className="absolute inset-0 bg-ink-950/90" onClick={close} />
           <motion.div
             className="relative w-full max-w-md rounded-2xl border border-white/10 bg-ink-900 p-7 shadow-2xl shadow-black/70"
             initial={{ scale: 0.95, y: 20, opacity: 0 }}

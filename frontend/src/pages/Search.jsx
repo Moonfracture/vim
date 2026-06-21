@@ -181,7 +181,7 @@ export default function Search() {
                 onChange={(e) => setRegion(e.target.value)}
               >
                 {REGIONS.map((r) => (
-                  <option key={r.value} value={r.value} className="bg-ink-900 text-slate-200">
+                  <option key={r.value} value={r.value}>
                     {r.label}
                   </option>
                 ))}
