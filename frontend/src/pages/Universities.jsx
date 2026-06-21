@@ -15,7 +15,7 @@ const fmtDate = (iso) => {
 
 export default function Universities() {
   const { user } = useAuth();
-  const isUni = user?.role === 'university';
+  const isUni = user?.role === 'university' || user?.role === 'admin';
   const isStudent = canEngage(user?.role);
   const [posts, setPosts] = useState([]);
 

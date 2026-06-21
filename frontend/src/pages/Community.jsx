@@ -45,7 +45,7 @@ export default function Community() {
   const [sending, setSending] = useState(false);
   const scrollRef = useRef(null);
 
-  const canPost = user?.role === 'student' || user?.role === 'university_student';
+  const canPost = user?.role === 'student' || user?.role === 'university_student' || user?.role === 'admin';
   const isUni = user?.role === 'university';
 
   const load = async (channel) => {

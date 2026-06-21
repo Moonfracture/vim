@@ -8,10 +8,11 @@ export const ROLES = {
   student: { label: 'Ученик', hint: 'Търси, сравнява и пита AI асистента', plan: 'Безплатен' },
   university_student: { label: 'Студент', hint: 'Споделя опит и помага на кандидатите', plan: 'Безплатен' },
   university: { label: 'Университет', hint: 'Публикува в „Университети“', plan: 'Платен план' },
+  admin: { label: 'Админ', hint: 'Пълен достъп до всички роли', plan: 'Пълен достъп' },
 };
 
-// Both pupil and university student have the same engagement permissions.
-export const canEngage = (role) => role === 'student' || role === 'university_student';
+// Roles that can engage (AI chat, favorites, community, likes). Admin can do everything.
+export const canEngage = (role) => role === 'student' || role === 'university_student' || role === 'admin';
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {

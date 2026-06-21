@@ -86,7 +86,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login' }) {
               <div className="mt-5">
                 <span className="label">Аз съм</span>
                 <div className="grid grid-cols-3 gap-2">
-                  {Object.entries(ROLES).map(([key, r]) => (
+                  {Object.entries(ROLES).filter(([key]) => key !== 'admin').map(([key, r]) => (
                     <button
                       key={key} type="button" onClick={() => setRole(key)}
                       className={`rounded-xl border px-2 py-3 text-center transition-all ${
@@ -144,7 +144,7 @@ export default function AuthModal({ open, onClose, initialMode = 'login' }) {
                 <input className="input" placeholder="Име" value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })} />
               )}
-              <input className="input" type="email" placeholder="Имейл" required value={form.email}
+              <input className="input" type={mode === 'signup' ? 'email' : 'text'} placeholder="Имейл" required value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })} />
               <input className="input" type="password" placeholder="Парола (поне 6 знака)" required
                 value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />

@@ -54,6 +54,7 @@ const DEMO = {
   student: { email: 'student@unikompas.bg', password: 'Uchenik2026!', name: 'Демо Ученик', role: 'student', plan: 'free', grade: 12 },
   universityStudent: { email: 'student-uni@unikompas.bg', password: 'Student2026!', name: 'Демо Студент', role: 'university_student', plan: 'free', studyYear: 2, university: 'Софийски университет „Св. Климент Охридски“' },
   university: { email: 'uni@unikompas.bg', password: 'Universitet2026!', name: 'Демо Университет', role: 'university', plan: 'paid' },
+  admin: { email: 'admin', password: '123456', name: 'Админ', role: 'admin', plan: 'paid' },
 };
 
 let schemaReady;
@@ -74,7 +75,7 @@ function ensureSchema() {
       ALTER TABLE app_users ADD COLUMN IF NOT EXISTS university TEXT;
       ALTER TABLE app_users DROP CONSTRAINT IF EXISTS app_users_role_check;
       ALTER TABLE app_users ADD CONSTRAINT app_users_role_check
-        CHECK (role IN ('student','university','university_student'));
+        CHECK (role IN ('student','university','university_student','admin'));
       CREATE TABLE IF NOT EXISTS favorites (
         user_id INT NOT NULL REFERENCES app_users(id) ON DELETE CASCADE,
         uni_key TEXT NOT NULL,
@@ -163,7 +164,7 @@ class HttpError extends Error { constructor(status, msg) { super(msg); this.stat
 function requireAuth(event, roles) {
   const user = verifyToken(bearer(event));
   if (!user) throw new HttpError(401, 'Изисква се вход.');
-  if (roles && !roles.includes(user.role)) throw new HttpError(403, 'Нямаш права за това действие.');
+  if (roles && user.role !== 'admin' && !roles.includes(user.role)) throw new HttpError(403, 'Нямаш права за това действие.');
   return user;
 }
 
