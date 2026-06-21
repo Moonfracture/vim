@@ -106,7 +106,7 @@ function Directory() {
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <h2 className="flex items-center gap-2 font-display text-xl font-bold text-forest-ink">
           <Icon.cap size={18} className="text-accent-soft" /> Всички университети
-          <span className="text-sm font-normal text-forest/50">({bgUniversities.length})</span>
+          <span className="text-sm font-normal text-forest/50">({list.length})</span>
         </h2>
         <p className="text-xs text-forest/50">Източник: РСВУ 2025 (МОН)</p>
       </div>
