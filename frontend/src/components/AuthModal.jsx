@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
 import { ROLES, useAuth } from '../context/AuthContext.jsx';
@@ -30,7 +31,7 @@ export default function AuthModal({ open, onClose }) {
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
       {open && (
         <motion.div
@@ -113,6 +114,7 @@ export default function AuthModal({ open, onClose }) {
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body,
   );
 }
