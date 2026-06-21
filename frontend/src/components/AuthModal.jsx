@@ -1,12 +1,15 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Icon } from '../lib/icons.jsx';
 import { ROLES, useAuth } from '../context/AuthContext.jsx';
 
-export default function AuthModal({ open, onClose }) {
+export default function AuthModal({ open, onClose, initialMode = 'login' }) {
   const { login, register } = useAuth();
-  const [mode, setMode] = useState('login');
+  const [mode, setMode] = useState(initialMode);
+
+  // Sync the mode to whichever button opened the modal (Вход → login, Регистрация → signup).
+  useEffect(() => { if (open) setMode(initialMode); }, [open, initialMode]);
   const [role, setRole] = useState('student');
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');

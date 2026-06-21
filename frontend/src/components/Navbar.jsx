@@ -15,11 +15,14 @@ const links = [
 export default function Navbar() {
   const { user, logout } = useAuth();
   const [authOpen, setAuthOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login');
   const navigate = useNavigate();
+
+  const openAuth = (mode) => { setAuthMode(mode); setAuthOpen(true); };
 
   // let other parts of the app (e.g. the gated chatbot) ask to open the login modal
   useEffect(() => {
-    const open = () => setAuthOpen(true);
+    const open = () => openAuth('login');
     window.addEventListener('unikompas:open-auth', open);
     return () => window.removeEventListener('unikompas:open-auth', open);
   }, []);
@@ -62,13 +65,13 @@ export default function Navbar() {
             </div>
           ) : (
             <>
-              <button onClick={() => setAuthOpen(true)} className="btn-ghost hidden sm:inline-flex">Вход</button>
-              <button onClick={() => setAuthOpen(true)} className="btn-primary">Регистрация</button>
+              <button onClick={() => openAuth('login')} className="btn-ghost hidden sm:inline-flex">Вход</button>
+              <button onClick={() => openAuth('signup')} className="btn-primary">Регистрация</button>
             </>
           )}
         </div>
       </nav>
-      <AuthModal open={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal open={authOpen} initialMode={authMode} onClose={() => setAuthOpen(false)} />
     </header>
   );
 }
