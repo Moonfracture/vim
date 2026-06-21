@@ -94,14 +94,18 @@ function buildContext(results, { field, region, scope, order, home }) {
   };
 }
 
+const PAGE = 4; // corners shown per page
+
 export default function Search() {
   const [field, setField] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [region, setRegion] = useState('all');
   const [picks, setPicks] = useState([]);
   const [order, setOrder] = useState(CRITERIA.map((c) => c.id));
-  const [results, setResults] = useState(null);
-  const [home, setHome] = useState(null);
+  const [results, setResults] = useState(null); // full ranked foreign list
+  const [homeList, setHomeList] = useState([]); // full ranked BG list
+  const [cornerPage, setCornerPage] = useState(0);
+  const [homeIndex, setHomeIndex] = useState(0);
 
   const byState = SUB_BY_STATE(region);
   const subOptions = useMemo(() => optionsIn(region), [region]);
@@ -116,21 +120,49 @@ export default function Search() {
   const compare = () => {
     if (!canCompare) return;
     const geo = byState ? { states: picks } : { countries: picks };
-    const ranked = rankUniversities(universities, { field, region, ...geo, orderedIds: order, top: 4 });
+    const ranked = rankUniversities(universities, { field, region, ...geo, orderedIds: order, top: Infinity });
     setResults(ranked);
-    setHome(rankBulgarian(bulgaria, { field, orderedIds: order })[0] || null);
+    setHomeList(rankBulgarian(bulgaria, { field, orderedIds: order, top: Infinity }));
+    setCornerPage(0);
+    setHomeIndex(0);
     // scroll to results after they mount
     setTimeout(() => {
       document.getElementById('results')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }, 80);
   };
 
+  // current page of corners + the currently selected BG home university
+  const cornerStart = cornerPage * PAGE;
+  const corners = results ? results.slice(cornerStart, cornerStart + PAGE) : [];
+  const cornerEnd = Math.min(cornerStart + PAGE, results?.length ?? 0);
+  const lastCornerPage = results ? Math.max(0, Math.ceil(results.length / PAGE) - 1) : 0;
+  const home = homeList[homeIndex] || null;
+
+  const homeControl = homeList.length > 1 ? (
+    <Pager
+      label={`Университет ${homeIndex + 1} / ${homeList.length}`}
+      onPrev={() => setHomeIndex((i) => (i - 1 + homeList.length) % homeList.length)}
+      onNext={() => setHomeIndex((i) => (i + 1) % homeList.length)}
+    />
+  ) : null;
+
+  const cornerControl = results && results.length > PAGE ? (
+    <Pager
+      label={`Места ${cornerStart + 1}–${cornerEnd} от ${results.length}`}
+      onPrev={() => setCornerPage((p) => Math.max(0, p - 1))}
+      onNext={() => setCornerPage((p) => Math.min(lastCornerPage, p + 1))}
+      prevDisabled={cornerPage === 0}
+      nextDisabled={cornerPage >= lastCornerPage}
+    />
+  ) : null;
+
   const context = useMemo(() => {
     if (!results) return null;
     const names = subOptions.filter((o) => picks.includes(o.key)).map((o) => o.label);
     const scope = names.length ? { kind: byState ? 'щати' : 'държави', names } : null;
-    return buildContext(results, { field, region, scope, order, home });
-  }, [results, field, region, picks, subOptions, byState, order, home]);
+    return buildContext(corners, { field, region, scope, order, home });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results, homeList, cornerPage, homeIndex, field, region, picks, subOptions, byState, order]);
 
   return (
     <div className="mx-auto max-w-7xl px-6 py-12">
@@ -233,13 +265,23 @@ export default function Search() {
               <div>
                 <h2 className="font-display text-xl font-bold text-forest-ink">Твоето X-сравнение</h2>
                 <p className="text-sm text-forest/70">
-                  България в центъра · топ {results.length} според приоритетите ти
-                  {field ? ` за „${field}“` : ''}.
+                  {results.length === 0
+                    ? 'Няма съвпадения за тези филтри.'
+                    : `България в центъра · места ${cornerStart + 1}–${cornerEnd} от ${results.length}`}
+                  {results.length > 0 && field ? ` за „${field}“` : ''}
+                  {results.length > 0 ? '.' : ''}
                 </p>
               </div>
             </div>
 
-            <PentominoResults results={results} order={order} field={field} home={home} />
+            <PentominoResults
+              results={corners}
+              order={order}
+              field={field}
+              home={home}
+              homeControl={homeControl}
+              cornerControl={cornerControl}
+            />
 
             <div className="mt-10">
               <Chatbot context={context} />
@@ -247,6 +289,33 @@ export default function Search() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+// Compact prev/next pager used for the BG center card and the corner countries.
+function Pager({ label, onPrev, onNext, prevDisabled = false, nextDisabled = false }) {
+  return (
+    <div className="inline-flex items-center gap-1 rounded-full border border-forest/15 bg-ink-850 px-1 py-1">
+      <button
+        type="button"
+        onClick={onPrev}
+        disabled={prevDisabled}
+        className="grid h-7 w-7 place-items-center rounded-full text-accent-soft transition-colors hover:bg-accent/10 disabled:opacity-30 disabled:hover:bg-transparent"
+        aria-label="Назад"
+      >
+        <span className="block rotate-180"><Icon.arrow size={15} /></span>
+      </button>
+      <span className="whitespace-nowrap px-1.5 text-[11px] font-semibold text-forest/70">{label}</span>
+      <button
+        type="button"
+        onClick={onNext}
+        disabled={nextDisabled}
+        className="grid h-7 w-7 place-items-center rounded-full text-accent-soft transition-colors hover:bg-accent/10 disabled:opacity-30 disabled:hover:bg-transparent"
+        aria-label="Напред"
+      >
+        <Icon.arrow size={15} />
+      </button>
     </div>
   );
 }

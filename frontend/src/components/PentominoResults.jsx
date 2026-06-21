@@ -2,11 +2,14 @@ import UniversityCard from './UniversityCard.jsx';
 import { Icon } from '../lib/icons.jsx';
 
 // X-pentomino: best-match BG university in the center, four ranked unis in the corners.
-export default function PentominoResults({ results, order, field, home }) {
+// `homeControl` pins a pager inside the center (BG) card; `cornerControl` pages the corners.
+export default function PentominoResults({ results, order, field, home, homeControl, cornerControl }) {
   const [tl, tr, bl, br] = [results[0], results[1], results[2], results[3]];
 
   return (
     <div>
+      {cornerControl && <div className="mb-4 flex justify-end">{cornerControl}</div>}
+
       {/* desktop: true X layout (3x3 grid, corners + center) */}
       <div className="hidden gap-4 lg:grid lg:grid-cols-3">
         <Cell card={tl} order={order} field={field} delay={0.05} />
@@ -16,7 +19,7 @@ export default function PentominoResults({ results, order, field, home }) {
         <Cell card={tr} order={order} field={field} delay={0.1} />
 
         <div className="flex items-center justify-center"><ConnectorRight /></div>
-        <Cell card={home} order={order} field={field} center delay={0} />
+        <Cell card={home} order={order} field={field} center delay={0} control={homeControl} />
         <div className="flex items-center justify-center"><ConnectorRight flip /></div>
 
         <Cell card={bl} order={order} field={field} delay={0.15} />
@@ -28,7 +31,7 @@ export default function PentominoResults({ results, order, field, home }) {
       <div className="grid gap-4 sm:grid-cols-2 lg:hidden">
         {home && (
           <div className="sm:col-span-2">
-            <UniversityCard data={home} order={order} field={field} center />
+            <UniversityCard data={home} order={order} field={field} center control={homeControl} />
           </div>
         )}
         {results.map((r, i) => (
@@ -39,9 +42,9 @@ export default function PentominoResults({ results, order, field, home }) {
   );
 }
 
-function Cell({ card, order, field, center, delay }) {
+function Cell({ card, order, field, center, delay, control }) {
   if (!card) return <div className="glass grid place-items-center p-5 text-sm text-forest/50">Няма съвпадение</div>;
-  return <UniversityCard data={card} order={order} field={field} center={center} delay={delay} />;
+  return <UniversityCard data={card} order={order} field={field} center={center} delay={delay} control={control} />;
 }
 
 function ConnectorRight({ flip }) {

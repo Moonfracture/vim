@@ -12,7 +12,8 @@ const websiteHref = (d) =>
   `https://www.google.com/search?q=${encodeURIComponent(`${d.name} ${d.country || ''} official website`)}`;
 
 // One result card. `center` styles the Bulgaria home card differently.
-export default function UniversityCard({ data, order, field, center = false, delay = 0 }) {
+// `control` renders an optional pager/action node pinned to the card bottom.
+export default function UniversityCard({ data, order, field, center = false, delay = 0, control = null }) {
   const isCountry = !!data.topUniversities; // bulgaria card shape
   const topCriteria = (order || []).slice(0, 3);
 
@@ -51,6 +52,7 @@ export default function UniversityCard({ data, order, field, center = false, del
       ) : (
         <UniBody data={data} topCriteria={topCriteria} field={field} />
       )}
+      {control && <div className="mt-3">{control}</div>}
     </motion.div>
   );
 }
