@@ -29,6 +29,7 @@ export const Icon = {
   heart: (p) => <S {...p}><path d="M12 21C5 16 3 12 3 8.5A4.5 4.5 0 0 1 12 6a4.5 4.5 0 0 1 9 2.5C21 12 19 16 12 21z" /></S>,
   calc: (p) => <S {...p}><rect x="4" y="3" width="16" height="18" rx="2" /><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15v4M8 19h4" /></S>,
   plus: (p) => <S {...p}><path d="M12 5v14M5 12h14" /></S>,
+  menu: (p) => <S {...p}><path d="M4 6h16M4 12h16M4 18h16" /></S>,
 };
 
 export const Flag = ({ iso2, className = '' }) => (
