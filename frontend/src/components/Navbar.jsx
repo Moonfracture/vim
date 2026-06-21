@@ -34,9 +34,9 @@ export default function Navbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-white/5 bg-ink-950/70 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 border-b border-forest/10 bg-ink-950/80 backdrop-blur-xl">
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
-        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold text-white">
+        <Link to="/" className="flex items-center gap-2 font-display text-lg font-bold text-forest-ink">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent/15 text-accent-soft ring-1 ring-accent/30">
             <Icon.compass size={20} />
           </span>
@@ -48,7 +48,7 @@ export default function Navbar() {
             <NavLink key={l.to} to={l.to} end={l.end}
               className={({ isActive }) =>
                 `rounded-lg px-3.5 py-2 text-sm font-medium transition-colors ${
-                  isActive ? 'bg-white/[0.06] text-white' : 'text-slate-400 hover:text-white'
+                  isActive ? 'bg-forest/[0.07] text-forest-ink' : 'text-forest/60 hover:text-forest-ink'
                 }`}>
               {l.label}
             </NavLink>
@@ -59,9 +59,9 @@ export default function Navbar() {
         <div className="hidden items-center gap-2 md:flex">
           {user ? (
             <div className="flex items-center gap-2">
-              <Link to="/profile" className="flex items-center gap-2 rounded-full pl-1 pr-1 transition-colors hover:bg-white/[0.05]">
+              <Link to="/profile" className="flex items-center gap-2 rounded-full pl-1 pr-1 transition-colors hover:bg-forest/[0.06]">
                 <span className="flex flex-col items-end leading-tight">
-                  <span className="text-sm font-semibold text-white">{user.name}</span>
+                  <span className="text-sm font-semibold text-forest-ink">{user.name}</span>
                   <span className="text-[11px] text-accent-soft">{ROLES[user.role]?.label}</span>
                 </span>
                 <span className="grid h-9 w-9 place-items-center rounded-full bg-accent/20 text-sm font-bold uppercase text-accent-soft ring-1 ring-accent/30">
@@ -92,28 +92,28 @@ export default function Navbar() {
 
       {/* Mobile menu panel */}
       {menuOpen && (
-        <div className="border-t border-white/5 bg-ink-950/95 px-4 py-3 md:hidden">
+        <div className="border-t border-forest/10 bg-ink-950/95 px-4 py-3 md:hidden">
           <div className="flex flex-col gap-1">
             {links.map((l) => (
               <NavLink key={l.to} to={l.to} end={l.end}
                 className={({ isActive }) =>
                   `rounded-lg px-3.5 py-2.5 text-sm font-medium transition-colors ${
-                    isActive ? 'bg-white/[0.06] text-white' : 'text-slate-300 hover:bg-white/[0.04] hover:text-white'
+                    isActive ? 'bg-forest/[0.07] text-forest-ink' : 'text-forest/70 hover:bg-forest/[0.05] hover:text-forest-ink'
                   }`}>
                 {l.label}
               </NavLink>
             ))}
           </div>
 
-          <div className="mt-3 border-t border-white/5 pt-3">
+          <div className="mt-3 border-t border-forest/10 pt-3">
             {user ? (
               <div className="flex flex-col gap-2">
-                <Link to="/profile" className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-white/[0.04]">
+                <Link to="/profile" className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-forest/[0.05]">
                   <span className="grid h-9 w-9 place-items-center rounded-full bg-accent/20 text-sm font-bold uppercase text-accent-soft ring-1 ring-accent/30">
                     {user.name?.[0] || 'U'}
                   </span>
                   <span className="flex flex-col leading-tight">
-                    <span className="text-sm font-semibold text-white">{user.name}</span>
+                    <span className="text-sm font-semibold text-forest-ink">{user.name}</span>
                     <span className="text-[11px] text-accent-soft">{ROLES[user.role]?.label}</span>
                   </span>
                 </Link>

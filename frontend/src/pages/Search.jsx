@@ -143,8 +143,8 @@ export default function Search() {
         <span className="chip mx-auto mb-4 w-fit border-accent/30 bg-accent/10 text-accent-soft">
           <Icon.search size={14} /> Търсачка
         </span>
-        <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">Намери своя университет</h1>
-        <p className="mt-3 text-slate-400">
+        <h1 className="font-display text-3xl font-bold text-forest-ink sm:text-4xl">Намери своя университет</h1>
+        <p className="mt-3 text-forest/70">
           Избери сфера, подреди критериите по важност и виж как се сравняват топ университетите с България.
         </p>
       </motion.div>
@@ -172,7 +172,7 @@ export default function Search() {
           <div>
             <label className="label">Регион (по желание)</label>
             <div className="relative">
-              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500">
+              <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-forest/50">
                 <Icon.globe size={16} />
               </span>
               <select
@@ -186,7 +186,7 @@ export default function Search() {
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-slate-500">
+              <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 rotate-90 text-forest/50">
                 <Icon.arrow size={15} />
               </span>
             </div>
@@ -212,7 +212,7 @@ export default function Search() {
           <Icon.spark size={18} /> Сравни университетите
         </button>
         {!field && (
-          <p className="mt-3 text-center text-xs text-slate-500">Първо избери сфера, за да продължиш.</p>
+          <p className="mt-3 text-center text-xs text-forest/50">Първо избери сфера, за да продължиш.</p>
         )}
       </motion.div>
 
@@ -231,8 +231,8 @@ export default function Search() {
                 <Icon.cap size={18} />
               </span>
               <div>
-                <h2 className="font-display text-xl font-bold text-white">Твоето X-сравнение</h2>
-                <p className="text-sm text-slate-400">
+                <h2 className="font-display text-xl font-bold text-forest-ink">Твоето X-сравнение</h2>
+                <p className="text-sm text-forest/70">
                   България в центъра · топ {results.length} според приоритетите ти
                   {field ? ` за „${field}“` : ''}.
                 </p>

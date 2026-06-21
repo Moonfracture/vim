@@ -44,13 +44,13 @@ export default function Chatbot({ context }) {
 
   return (
     <div className="glass flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2.5 border-b border-white/5 px-5 py-3.5">
+      <div className="flex items-center gap-2.5 border-b border-forest/10 px-5 py-3.5">
         <span className="grid h-8 w-8 place-items-center rounded-lg bg-accent/15 text-accent-soft ring-1 ring-accent/30">
           <Icon.spark size={16} />
         </span>
         <div>
-          <p className="text-sm font-semibold text-white">AI асистент</p>
-          <p className="text-[11px] text-slate-500">Анализира картите · powered by Gemini</p>
+          <p className="text-sm font-semibold text-forest-ink">AI асистент</p>
+          <p className="text-[11px] text-forest/50">Анализира картите · powered by Gemini</p>
         </div>
       </div>
 
@@ -60,7 +60,7 @@ export default function Chatbot({ context }) {
             <div className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
               m.role === 'user'
                 ? 'bg-accent text-white'
-                : 'border border-white/10 bg-white/[0.04] text-slate-200'
+                : 'border border-forest/10 bg-ink-850 text-forest-ink'
             }`}>
               {m.text}
             </div>
@@ -68,7 +68,7 @@ export default function Chatbot({ context }) {
         ))}
         {loading && (
           <div className="flex justify-start">
-            <div className="rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-3">
+            <div className="rounded-2xl border border-forest/10 bg-ink-850 px-4 py-3">
               <span className="flex gap-1">
                 {[0, 1, 2].map((i) => (
                   <span key={i} className="h-1.5 w-1.5 animate-bounce rounded-full bg-accent-soft" style={{ animationDelay: `${i * 0.15}s` }} />
@@ -82,13 +82,13 @@ export default function Chatbot({ context }) {
       {isStudent && messages.length <= 2 && (
         <div className="flex flex-wrap gap-2 px-5 pb-3">
           {prompts.map((p) => (
-            <button key={p} onClick={() => send(p)} className="chip hover:border-accent/40 hover:text-white">{p}</button>
+            <button key={p} onClick={() => send(p)} className="chip hover:border-accent/40 hover:text-forest-ink">{p}</button>
           ))}
         </div>
       )}
 
       {isStudent ? (
-        <div className="flex items-center gap-2 border-t border-white/5 p-3">
+        <div className="flex items-center gap-2 border-t border-forest/10 p-3">
           <input
             className="input"
             placeholder="Попитай за резултатите…"
@@ -101,12 +101,12 @@ export default function Chatbot({ context }) {
           </button>
         </div>
       ) : user ? (
-        <div className="border-t border-white/5 p-4 text-center text-sm text-slate-400">
+        <div className="border-t border-forest/10 p-4 text-center text-sm text-forest/70">
           AI асистентът е достъпен за ученически профили.
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-2 border-t border-white/5 p-4 text-center">
-          <p className="text-sm text-slate-400">Влез в профила си, за да питаш AI асистента.</p>
+        <div className="flex flex-col items-center gap-2 border-t border-forest/10 p-4 text-center">
+          <p className="text-sm text-forest/70">Влез в профила си, за да питаш AI асистента.</p>
           <button
             onClick={() => window.dispatchEvent(new CustomEvent('unikompas:open-auth'))}
             className="btn-primary px-5 py-2.5 text-sm"

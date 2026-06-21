@@ -86,8 +86,8 @@ export default function Community() {
         <span className="chip mb-4 w-fit border-accent/30 bg-accent/10 text-accent-soft">
           <Icon.users size={14} /> Общност
         </span>
-        <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">Питай тези, които вече са там</h1>
-        <p className="mt-3 text-slate-400">
+        <h1 className="font-display text-3xl font-bold text-forest-ink sm:text-4xl">Питай тези, които вече са там</h1>
+        <p className="mt-3 text-forest/70">
           Свържи се със студенти от университети у нас и в чужбина. Задай въпрос — реален човек ще ти отговори.
         </p>
       </motion.div>
@@ -95,20 +95,20 @@ export default function Community() {
       <div className="grid gap-5 lg:grid-cols-[260px_1fr]">
         {/* Channels */}
         <div className="glass h-fit p-3">
-          <p className="px-2 pb-2 pt-1 text-[11px] uppercase tracking-wider text-slate-500">Канали</p>
+          <p className="px-2 pb-2 pt-1 text-[11px] uppercase tracking-wider text-forest/50">Канали</p>
           <div className="space-y-1">
             {CHANNELS.map((c) => (
               <button
                 key={c.id}
                 onClick={() => setActive(c.id)}
                 className={`w-full rounded-xl px-3 py-2.5 text-left transition-colors ${
-                  active === c.id ? 'bg-accent/15 ring-1 ring-accent/30' : 'hover:bg-white/[0.05]'
+                  active === c.id ? 'bg-accent/15 ring-1 ring-accent/30' : 'hover:bg-forest/[0.06]'
                 }`}
               >
-                <span className={`flex items-center gap-2 text-sm font-medium ${active === c.id ? 'text-white' : 'text-slate-300'}`}>
+                <span className={`flex items-center gap-2 text-sm font-medium ${active === c.id ? 'text-forest-ink' : 'text-forest/70'}`}>
                   <Icon.chat size={14} /> {c.name}
                 </span>
-                <span className="mt-0.5 block truncate text-xs text-slate-500">{c.desc}</span>
+                <span className="mt-0.5 block truncate text-xs text-forest/50">{c.desc}</span>
               </button>
             ))}
           </div>
@@ -116,9 +116,9 @@ export default function Community() {
 
         {/* Chat */}
         <div className="glass flex min-h-[520px] flex-col overflow-hidden">
-          <div className="border-b border-white/5 px-5 py-3.5">
-            <p className="text-sm font-semibold text-white">{channel?.name}</p>
-            <p className="text-[11px] text-slate-500">{channel?.desc}</p>
+          <div className="border-b border-forest/10 px-5 py-3.5">
+            <p className="text-sm font-semibold text-forest-ink">{channel?.name}</p>
+            <p className="text-[11px] text-forest/50">{channel?.desc}</p>
           </div>
 
           <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto px-5 py-4">
@@ -126,8 +126,8 @@ export default function Community() {
               <Bubble key={`seed-${i}`} from={m.from} role={m.role} text={m.text} t={m.t} mine={false} />
             ))}
             {seeded.length > 0 && live.length > 0 && (
-              <div className="flex items-center gap-3 py-1 text-[10px] uppercase tracking-wider text-slate-600">
-                <span className="h-px flex-1 bg-white/10" /> На живо <span className="h-px flex-1 bg-white/10" />
+              <div className="flex items-center gap-3 py-1 text-[10px] uppercase tracking-wider text-forest/40">
+                <span className="h-px flex-1 bg-forest/10" /> На живо <span className="h-px flex-1 bg-forest/10" />
               </div>
             )}
             {live.map((m) => (
@@ -143,8 +143,8 @@ export default function Community() {
           </div>
 
           {!user && (
-            <div className="flex flex-col items-center gap-2 border-t border-white/5 p-4 text-center">
-              <p className="text-sm text-slate-400">Влез в профила си, за да пишеш в общността.</p>
+            <div className="flex flex-col items-center gap-2 border-t border-forest/10 p-4 text-center">
+              <p className="text-sm text-forest/70">Влез в профила си, за да пишеш в общността.</p>
               <button
                 onClick={() => window.dispatchEvent(new CustomEvent('unikompas:open-auth'))}
                 className="btn-primary px-5 py-2.5 text-sm"
@@ -155,14 +155,14 @@ export default function Community() {
           )}
 
           {isUni && (
-            <div className="border-t border-white/5 p-4 text-center text-sm text-slate-400">
+            <div className="border-t border-forest/10 p-4 text-center text-sm text-forest/70">
               Университетските профили не могат да пишат тук. Споделяй новини в{' '}
               <span className="font-semibold text-accent-soft">Университети</span>.
             </div>
           )}
 
           {isStudent && (
-            <div className="flex items-center gap-2 border-t border-white/5 p-3">
+            <div className="flex items-center gap-2 border-t border-forest/10 p-3">
               <input
                 className="input"
                 placeholder="Напиши съобщение…"
@@ -185,18 +185,18 @@ function Bubble({ from, role, text, t, mine }) {
   return (
     <div className={`flex ${mine ? 'justify-end' : 'justify-start'}`}>
       <div className={`max-w-[80%] ${mine ? 'items-end text-right' : ''}`}>
-        <div className="mb-1 flex items-center gap-2 text-[11px] text-slate-500">
+        <div className="mb-1 flex items-center gap-2 text-[11px] text-forest/50">
           {!mine && <RoleDot role={role} />}
           <span>{from}</span>
-          {t && <span className="text-slate-600">· {t}</span>}
+          {t && <span className="text-forest/40">· {t}</span>}
         </div>
         <div
           className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
             mine
               ? 'bg-accent text-white'
               : role === 'student'
-                ? 'border border-accent/20 bg-accent/[0.06] text-slate-200'
-                : 'border border-white/10 bg-white/[0.04] text-slate-200'
+                ? 'border border-accent/20 bg-accent/[0.06] text-forest-ink'
+                : 'border border-forest/10 bg-ink-850 text-forest-ink'
           }`}
         >
           {text}
@@ -210,7 +210,7 @@ function RoleDot({ role }) {
   const isStudent = role === 'student';
   return (
     <span className={`inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold ${
-      isStudent ? 'bg-accent/15 text-accent-soft' : 'bg-white/10 text-slate-400'
+      isStudent ? 'bg-accent/15 text-accent-soft' : 'bg-forest/10 text-forest/60'
     }`}>
       {isStudent ? 'студент' : 'кандидат'}
     </span>

@@ -4,17 +4,33 @@ export default {
   theme: {
     extend: {
       colors: {
+        // page + light surfaces (was near-black). Now mint → white range.
         ink: {
-          950: '#080911',
-          900: '#0b0d17',
-          850: '#0f111d',
-          800: '#141727',
-          700: '#1c2030',
+          950: '#e8f3e9', // page background (lightest)
+          900: '#ffffff', // raised card surface
+          850: '#f1f7f1', // inset / input surface
+          800: '#e2ede3', // hover
+          700: '#caddce', // borders
         },
+        // forest-green panels for hero/feature cards + dark text
+        forest: {
+          DEFAULT: '#0E3B2A',
+          900: '#0a2d20',
+          800: '#0E3B2A',
+          700: '#155138',
+          ink: '#0c2a1e', // darkest — body text on light bg
+        },
+        // primary accent — vivid green
         accent: {
-          DEFAULT: '#6366f1',
-          soft: '#818cf8',
-          deep: '#4f46e5',
+          DEFAULT: '#37B96A',
+          soft: '#2f9e5a', // readable green text on light bg
+          deep: '#2a8f51', // hover
+        },
+        // secondary accent — coral
+        coral: {
+          DEFAULT: '#E85B4F',
+          soft: '#f2796f',
+          deep: '#d4493e',
         },
       },
       fontFamily: {

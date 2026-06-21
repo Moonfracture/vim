@@ -3,27 +3,27 @@
 @tailwind utilities;
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 html { scroll-behavior: smooth; }
 
 body {
-  @apply bg-ink-950 text-slate-200 font-sans antialiased;
+  @apply bg-ink-950 text-forest-ink font-sans antialiased;
   background-image:
-    radial-gradient(60rem 60rem at 75% -10%, rgba(99, 102, 241, 0.18), transparent 60%),
-    radial-gradient(50rem 50rem at 0% 20%, rgba(79, 70, 229, 0.12), transparent 55%);
+    radial-gradient(60rem 60rem at 75% -10%, rgba(55, 185, 106, 0.10), transparent 60%),
+    radial-gradient(50rem 50rem at 0% 20%, rgba(14, 59, 42, 0.05), transparent 55%);
   background-attachment: fixed;
 }
 
-/* subtle starfield / noise overlay for atmosphere */
+/* subtle dot texture for atmosphere */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-image: radial-gradient(rgba(14, 59, 42, 0.04) 1px, transparent 1px);
   background-size: 3px 3px;
   opacity: 0.6;
 }
@@ -32,11 +32,11 @@ body::before {
 
 @layer components {
   .glass {
-    @apply rounded-2xl border border-white/10 bg-white/[0.04] backdrop-blur-xl;
-    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.06) inset, 0 24px 60px -30px rgba(0, 0, 0, 0.8);
+    @apply rounded-2xl border border-forest/10 bg-ink-900;
+    box-shadow: 0 1px 2px rgba(14, 59, 42, 0.06), 0 12px 32px -12px rgba(14, 59, 42, 0.12);
   }
   .glass-hover {
-    @apply transition-all duration-300 hover:border-accent/40 hover:bg-white/[0.06];
+    @apply transition-all duration-300 hover:border-accent/40 hover:shadow-lg;
     @apply hover:-translate-y-0.5;
   }
   .btn {
@@ -46,27 +46,27 @@ body::before {
     @apply btn bg-accent text-white shadow-lg shadow-accent/25 hover:bg-accent-deep hover:shadow-accent/40;
   }
   .btn-ghost {
-    @apply btn border border-white/10 bg-white/[0.03] text-slate-200 hover:border-white/25 hover:bg-white/[0.07];
+    @apply btn border border-forest/15 bg-white text-forest-ink hover:border-forest/30 hover:bg-ink-850;
   }
   .input {
-    @apply w-full rounded-xl border border-white/10 bg-ink-850/80 px-4 py-3 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-500 focus:border-accent/60 focus:ring-2 focus:ring-accent/20;
+    @apply w-full rounded-xl border border-forest/15 bg-ink-850 px-4 py-3 text-sm text-forest-ink outline-none transition-colors placeholder:text-forest/40 focus:border-accent/60 focus:ring-2 focus:ring-accent/20;
   }
   .chip {
-    @apply inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-xs font-medium text-slate-300;
+    @apply inline-flex items-center gap-1.5 rounded-full border border-forest/10 bg-ink-850 px-3 py-1 text-xs font-medium text-forest/70;
   }
   .label {
-    @apply mb-2 block text-xs font-semibold uppercase tracking-wider text-slate-400;
+    @apply mb-2 block text-xs font-semibold uppercase tracking-wider text-forest/60;
   }
 }
 
 /* thin custom scrollbar */
 ::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-thumb { @apply rounded-full bg-white/10; }
-::-webkit-scrollbar-thumb:hover { @apply bg-white/20; }
+::-webkit-scrollbar-thumb { @apply rounded-full bg-forest/15; }
+::-webkit-scrollbar-thumb:hover { @apply bg-forest/30; }
 ::-webkit-scrollbar-track { background: transparent; }
 
 .grad-text {
-  background: linear-gradient(120deg, #c7d2fe 0%, #818cf8 45%, #6366f1 100%);
+  background: linear-gradient(120deg, #155138 0%, #37B96A 45%, #2a8f51 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;

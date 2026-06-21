@@ -55,8 +55,8 @@ export default function Calculator() {
         <span className="chip mx-auto mb-4 w-fit border-accent/30 bg-accent/10 text-accent-soft">
           <Icon.calc size={14} /> Балообразуване
         </span>
-        <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">Изчисли своя бал</h1>
-        <p className="mt-3 text-slate-400">
+        <h1 className="font-display text-3xl font-bold text-forest-ink sm:text-4xl">Изчисли своя бал</h1>
+        <p className="mt-3 text-forest/70">
           Избери схема, въведи оценките си (по скала 2.00–6.00) и виж ориентировъчния си бал.
         </p>
       </motion.div>
@@ -77,8 +77,8 @@ export default function Calculator() {
                 onClick={() => applyPreset(p)}
                 className={`chip transition-colors ${
                   presetId === p.id
-                    ? 'border-accent/50 bg-accent/15 text-white'
-                    : 'hover:border-accent/40 hover:text-white'
+                    ? 'border-accent/50 bg-accent/15 text-forest-ink'
+                    : 'hover:border-accent/40 hover:text-forest-ink'
                 }`}
               >
                 {p.label}
@@ -87,36 +87,36 @@ export default function Calculator() {
           </div>
 
           <div className="mt-6 space-y-2.5">
-            <div className="flex items-center gap-2 px-1 text-[11px] uppercase tracking-wider text-slate-500">
+            <div className="flex items-center gap-2 px-1 text-[11px] uppercase tracking-wider text-forest/50">
               <span className="flex-1">Компонент</span>
               <span className="w-20 text-center">Оценка</span>
               <span className="w-16 text-center">Коеф.</span>
               <span className="w-6" />
             </div>
             {rows.map((r, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] p-2">
+              <div key={i} className="flex items-center gap-2 rounded-xl border border-forest/10 bg-ink-850 p-2">
                 <input
-                  className="min-w-0 flex-1 bg-transparent px-2 text-sm text-slate-200 outline-none placeholder:text-slate-600"
+                  className="min-w-0 flex-1 bg-transparent px-2 text-sm text-forest-ink outline-none placeholder:text-forest/40"
                   value={r.label}
                   onChange={(e) => setRow(i, { label: e.target.value })}
                   placeholder="Компонент"
                 />
                 <input
                   type="number" min="2" max="6" step="0.01" inputMode="decimal"
-                  className="w-20 rounded-lg border border-white/10 bg-ink-850/80 px-2 py-2 text-center text-sm text-white outline-none focus:border-accent/60"
+                  className="w-20 rounded-lg border border-forest/15 bg-ink-900 px-2 py-2 text-center text-sm text-forest-ink outline-none focus:border-accent/60"
                   value={r.grade}
                   onChange={(e) => setRow(i, { grade: e.target.value })}
                   placeholder="—"
                 />
                 <input
                   type="number" min="0" max="10" step="1" inputMode="numeric"
-                  className="w-16 rounded-lg border border-white/10 bg-ink-850/80 px-2 py-2 text-center text-sm text-accent-soft outline-none focus:border-accent/60"
+                  className="w-16 rounded-lg border border-forest/15 bg-ink-900 px-2 py-2 text-center text-sm text-accent-soft outline-none focus:border-accent/60"
                   value={r.coef}
                   onChange={(e) => setRow(i, { coef: e.target.value })}
                 />
                 <button
                   onClick={() => removeRow(i)}
-                  className="grid h-6 w-6 shrink-0 place-items-center text-slate-500 transition-colors hover:text-red-400"
+                  className="grid h-6 w-6 shrink-0 place-items-center text-forest/50 transition-colors hover:text-coral"
                   aria-label="Махни компонента"
                 >
                   <Icon.close size={15} />
@@ -134,26 +134,26 @@ export default function Calculator() {
         <div className="lg:sticky lg:top-24 lg:self-start">
           <div className="glass border-accent/40 bg-accent/[0.07] p-6 text-center ring-1 ring-accent/20">
             <p className="text-xs uppercase tracking-wider text-accent-soft">Твоят бал</p>
-            <p className="mt-2 font-display text-5xl font-bold text-white">
+            <p className="mt-2 font-display text-5xl font-bold text-forest-ink">
               {bal.toFixed(2)}
-              <span className="text-xl font-medium text-slate-400"> / {max.toFixed(0)}</span>
+              <span className="text-xl font-medium text-forest/60"> / {max.toFixed(0)}</span>
             </p>
-            <div className="mt-4 h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-forest/10">
               <motion.span
-                className="block h-full rounded-full bg-gradient-to-r from-accent-deep to-accent-soft"
+                className="block h-full rounded-full bg-gradient-to-r from-accent-deep to-accent"
                 animate={{ width: `${pct}%` }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
               />
             </div>
-            <p className="mt-2 text-sm font-semibold text-slate-300">{pct}% от максимума</p>
+            <p className="mt-2 text-sm font-semibold text-forest/70">{pct}% от максимума</p>
             {!complete && (
-              <p className="mt-3 text-xs text-amber-300/80">
+              <p className="mt-3 text-xs text-coral">
                 Попълни всички оценки за точен резултат ({filled}/{total}).
               </p>
             )}
           </div>
 
-          <p className="mt-4 px-1 text-xs leading-relaxed text-slate-500">
+          <p className="mt-4 px-1 text-xs leading-relaxed text-forest/50">
             <Icon.spark size={13} className="mb-0.5 mr-1 inline" />
             Ориентировъчно. Всеки университет и специалност има своя формула — провери
             официалния правилник за прием. Можеш да редактираш компонентите и коефициентите.

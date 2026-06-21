@@ -40,7 +40,7 @@ export default function PentominoResults({ results, order, field, home }) {
 }
 
 function Cell({ card, order, field, center, delay }) {
-  if (!card) return <div className="glass grid place-items-center p-5 text-sm text-slate-500">Няма съвпадение</div>;
+  if (!card) return <div className="glass grid place-items-center p-5 text-sm text-forest/50">Няма съвпадение</div>;
   return <UniversityCard data={card} order={order} field={field} center={center} delay={delay} />;
 }
 

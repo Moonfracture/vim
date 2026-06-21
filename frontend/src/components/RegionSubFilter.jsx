@@ -18,18 +18,18 @@ export default function RegionSubFilter({ label, items, selected, onChange }) {
       <div className="mb-2 flex items-center justify-between gap-2">
         <span className="label mb-0">{label}</span>
         <div className="flex items-center gap-2">
-          <span className="text-[11px] text-slate-500">{sel.size} от {items.length} избрани</span>
+          <span className="text-[11px] text-forest/50">{sel.size} от {items.length} избрани</span>
           <button
             type="button"
             onClick={() => onChange(items.map((it) => it.key))}
-            className="chip py-0.5 text-[11px] hover:border-accent/40 hover:text-white"
+            className="chip py-0.5 text-[11px] hover:border-accent/40 hover:text-forest-ink"
           >
             Избери всички
           </button>
           <button
             type="button"
             onClick={() => onChange([])}
-            className="chip py-0.5 text-[11px] hover:border-accent/40 hover:text-white"
+            className="chip py-0.5 text-[11px] hover:border-accent/40 hover:text-forest-ink"
           >
             Изчисти
           </button>
@@ -46,8 +46,8 @@ export default function RegionSubFilter({ label, items, selected, onChange }) {
               aria-pressed={on}
               className={`chip py-1 transition-colors ${
                 on
-                  ? 'border-accent/50 bg-accent/15 text-white'
-                  : 'text-slate-300 hover:border-accent/40 hover:text-white'
+                  ? 'border-accent/50 bg-accent/15 text-forest-ink'
+                  : 'text-forest/70 hover:border-accent/40 hover:text-forest-ink'
               }`}
             >
               {it.iso2 && <Flag iso2={it.iso2} className="h-3 w-[18px]" />}

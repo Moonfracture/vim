@@ -31,16 +31,16 @@ export default function SpecialtyAutocomplete({ field, value, onChange }) {
         onBlur={() => setTimeout(() => setOpen(false), 120)}
       />
       {open && !disabled && suggestions.length > 0 && (
-        <ul className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-ink-900 p-1.5 shadow-2xl shadow-black/60">
+        <ul className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-forest/10 bg-ink-900 p-1.5 shadow-2xl shadow-forest/20">
           {suggestions.map((s) => (
             <li key={s}>
               <button
                 type="button"
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => { setQuery(s); onChange(s); setOpen(false); }}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-slate-300 transition-colors hover:bg-white/[0.05] hover:text-white"
+                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-forest/70 transition-colors hover:bg-forest/[0.06] hover:text-forest-ink"
               >
-                <Icon.cap size={15} className="text-slate-500" /> {s}
+                <Icon.cap size={15} className="text-forest/50" /> {s}
               </button>
             </li>
           ))}

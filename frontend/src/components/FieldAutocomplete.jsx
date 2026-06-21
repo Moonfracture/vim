@@ -25,7 +25,7 @@ export default function FieldAutocomplete({ value, onChange }) {
   return (
     <div className="relative" ref={boxRef}>
       <div className="relative">
-        <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500"><Icon.search size={16} /></span>
+        <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-forest/50"><Icon.search size={16} /></span>
         <input
           className="input pl-10"
           placeholder="напр. Компютърни науки, AI, медицина…"
@@ -47,7 +47,7 @@ export default function FieldAutocomplete({ value, onChange }) {
       </div>
 
       {open && suggestions.length > 0 && (
-        <ul className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-white/10 bg-ink-900 p-1.5 shadow-2xl shadow-black/60">
+        <ul className="absolute z-30 mt-2 w-full overflow-hidden rounded-xl border border-forest/10 bg-ink-900 p-1.5 shadow-2xl shadow-forest/20">
           {suggestions.map((s, i) => (
             <li key={s.field}>
               <button
@@ -56,7 +56,7 @@ export default function FieldAutocomplete({ value, onChange }) {
                 onClick={() => pick(s.field)}
                 onMouseEnter={() => setHi(i)}
                 className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-sm transition-colors ${
-                  i === hi ? 'bg-accent/15 text-white' : 'text-slate-300 hover:bg-white/[0.05]'
+                  i === hi ? 'bg-accent/15 text-forest-ink' : 'text-forest/70 hover:bg-forest/[0.06]'
                 }`}
               >
                 <span className="font-medium">{s.field}</span>

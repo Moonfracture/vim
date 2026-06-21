@@ -27,10 +27,10 @@ export default function Home() {
           <motion.span variants={item} className="chip mx-auto mb-6 w-fit border-accent/30 bg-accent/10 text-accent-soft">
             <Icon.spark size={14} /> Хакатон · Избор на университет
           </motion.span>
-          <motion.h1 variants={item} className="mx-auto max-w-4xl font-display text-4xl font-bold leading-[1.05] text-white sm:text-6xl">
+          <motion.h1 variants={item} className="mx-auto max-w-4xl font-display text-4xl font-bold leading-[1.05] text-forest-ink sm:text-6xl">
             Намери най-добрия<br /><span className="grad-text">университет за теб</span>
           </motion.h1>
-          <motion.p variants={item} className="mx-auto mt-6 max-w-2xl text-lg text-slate-400">
+          <motion.p variants={item} className="mx-auto mt-6 max-w-2xl text-lg text-forest/70">
             Сравни такси, стойност на дипломата, Еразъм възможности и качество на живот —
             на едно място. Реши има ли смисъл да учиш в чужбина, или у дома.
           </motion.p>
@@ -43,7 +43,7 @@ export default function Home() {
             </Link>
           </motion.div>
 
-          <motion.div variants={item} className="mx-auto mt-10 flex max-w-lg flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-slate-400">
+          <motion.div variants={item} className="mx-auto mt-10 flex max-w-lg flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm text-forest/70">
             <Stat value={universities.length} label="световни университета" />
             <Stat value={countries.length} label="държави" />
             <Stat value={bulgaria.universityCount} label="български университета" />
@@ -62,8 +62,8 @@ export default function Home() {
               <span className="grid h-11 w-11 place-items-center rounded-xl bg-accent/15 text-accent-soft ring-1 ring-accent/30">
                 <f.icon size={22} />
               </span>
-              <h3 className="mt-4 font-display text-lg font-semibold text-white">{f.title}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-400">{f.text}</p>
+              <h3 className="mt-4 font-display text-lg font-semibold text-forest-ink">{f.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-forest/70">{f.text}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -73,8 +73,8 @@ export default function Home() {
       <section className="mx-auto max-w-7xl px-6 py-10">
         <div className="glass flex flex-col items-center gap-6 p-8 sm:flex-row sm:justify-between">
           <div>
-            <h2 className="font-display text-2xl font-bold text-white">За кого е УниКомпас?</h2>
-            <p className="mt-1 text-sm text-slate-400">Един инструмент, три гледни точки.</p>
+            <h2 className="font-display text-2xl font-bold text-forest-ink">За кого е УниКомпас?</h2>
+            <p className="mt-1 text-sm text-forest/70">Един инструмент, три гледни точки.</p>
           </div>
           <div className="flex flex-wrap gap-3">
             {['Ученици 8–12 клас', 'Родители', 'Университети'].map((a) => (
@@ -88,7 +88,7 @@ export default function Home() {
 
       {/* Flag marquee-ish preview */}
       <section className="mx-auto max-w-7xl px-6 pb-6">
-        <p className="mb-4 text-center text-xs uppercase tracking-widest text-slate-500">Държави в сравнението</p>
+        <p className="mb-4 text-center text-xs uppercase tracking-widest text-forest/50">Държави в сравнението</p>
         <div className="flex flex-wrap justify-center gap-2.5">
           {countries.slice(0, 22).map((c) => (
             <span key={c.name} className="chip gap-2 py-1.5">
@@ -104,7 +104,7 @@ export default function Home() {
 function Stat({ value, label }) {
   return (
     <span className="flex items-baseline gap-1.5">
-      <span className="font-display text-2xl font-bold text-white">{value}</span>
+      <span className="font-display text-2xl font-bold text-forest-ink">{value}</span>
       <span>{label}</span>
     </span>
   );

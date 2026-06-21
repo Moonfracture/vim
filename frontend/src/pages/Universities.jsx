@@ -14,7 +14,7 @@ const SEED = [
     fields: ['Компютърни науки', 'Право', 'Природни науки', 'Хуманитарни науки', 'Социални науки'],
     balo: 'Признават се матури; за Информатика (ФМИ) математика с коеф. 2.5 + оценки от диплома',
     tuition: '~700–4500 лв./год.',
-    hue: 'from-indigo-500/30 to-violet-600/20',
+    hue: 'from-emerald-500/30 to-green-600/20',
     blurb: 'Най-старият български университет — 16 факултета, силни природни и хуманитарни науки.',
     achievements: ['№1 в България (Scimago)', 'Над 20 000 студенти', 'Партньор по 600+ Еразъм програми'],
     photos: ['Ректорат', 'Библиотека', 'Аула'],
@@ -27,7 +27,7 @@ const SEED = [
     fields: ['Инженерство', 'Компютърни науки'],
     balo: 'Матура/изпит по математика (до 3×) + оценки от диплома',
     tuition: '~800–4000 лв./год.',
-    hue: 'from-sky-500/30 to-indigo-600/20',
+    hue: 'from-teal-500/30 to-emerald-600/20',
     blurb: 'Водещ инженерен университет с фокус върху IT, електроника и роботика.',
     achievements: ['Най-добра инженерна школа', 'Лаборатории с индустрията', 'Високи нива на реализация'],
     photos: ['Кампус', 'Лаборатория', 'Хакатон'],
@@ -105,7 +105,7 @@ const SEED = [
     fields: ['Медицина'],
     balo: 'ДЗИ БЕЛ + 3×Биология + 3×Химия (изпити); макс. бал 42',
     tuition: '~900–8000 лв./год.',
-    hue: 'from-fuchsia-500/30 to-purple-600/20',
+    hue: 'from-emerald-500/30 to-green-600/20',
     blurb: 'Медицина, дентална медицина и фармация с модерна симулационна база.',
     achievements: ['Симулационен тренировъчен център', 'Международни студенти', 'Силна клинична практика'],
     photos: ['Клиника', 'Симулации', 'Аудитория'],
@@ -118,7 +118,7 @@ const SEED = [
     fields: ['Инженерство', 'Изкуства и дизайн'],
     balo: 'Изпит по математика + изпит по рисуване (за архитектура) + диплома',
     tuition: '~800–4000 лв./год.',
-    hue: 'from-slate-400/30 to-indigo-600/20',
+    hue: 'from-green-500/30 to-teal-600/20',
     blurb: 'Специализиран в архитектура, строително инженерство и геодезия.',
     achievements: ['Единствен профилиран в страната', 'Силна проектантска база', 'Признати архитекти'],
     photos: ['Корпус', 'Ателие', 'Макетна зала'],
@@ -193,19 +193,19 @@ export default function Universities() {
           <span className="chip mb-4 w-fit border-accent/30 bg-accent/10 text-accent-soft">
             <Icon.cap size={14} /> Университети
           </span>
-          <h1 className="font-display text-3xl font-bold text-white sm:text-4xl">Витрина на университетите</h1>
-          <p className="mt-3 text-slate-400">
+          <h1 className="font-display text-3xl font-bold text-forest-ink sm:text-4xl">Витрина на университетите</h1>
+          <p className="mt-3 text-forest/70">
             Университетите публикуват новини и събития. Учениците ги харесват. Влез с роля „Университет“, за да публикуваш.
           </p>
         </div>
-        <span className={`chip ${isUni ? 'border-accent/30 bg-accent/10 text-accent-soft' : 'text-slate-400'}`}>
+        <span className={`chip ${isUni ? 'border-accent/30 bg-accent/10 text-accent-soft' : 'text-forest/60'}`}>
           {isUni ? <><Icon.check size={14} /> Можеш да публикуваш</> : <><Icon.users size={14} /> Режим на преглед</>}
         </span>
       </motion.div>
 
       {/* Публикации — persistent, shared feed */}
       <section className="mb-12">
-        <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-white">
+        <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-forest-ink">
           <Icon.chat size={18} className="text-accent-soft" /> Публикации
         </h2>
 
@@ -213,7 +213,7 @@ export default function Universities() {
 
         {!user && (
           <div className="glass mb-5 flex flex-col items-center gap-2 p-5 text-center">
-            <p className="text-sm text-slate-400">Влез като ученик, за да харесваш публикации, или като университет, за да публикуваш.</p>
+            <p className="text-sm text-forest/70">Влез като ученик, за да харесваш публикации, или като университет, за да публикуваш.</p>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('unikompas:open-auth'))}
               className="btn-primary px-5 py-2.5 text-sm"
@@ -224,7 +224,7 @@ export default function Universities() {
         )}
 
         {posts.length === 0 ? (
-          <div className="glass p-8 text-center text-sm text-slate-400">Все още няма публикации.</div>
+          <div className="glass p-8 text-center text-sm text-forest/70">Все още няма публикации.</div>
         ) : (
           <div className="space-y-3">
             {posts.map((p) => (
@@ -237,7 +237,7 @@ export default function Universities() {
       </section>
 
       {/* Static showcase */}
-      <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-white">
+      <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold text-forest-ink">
         <Icon.cap size={18} className="text-accent-soft" /> Профили
       </h2>
       <div className="grid gap-6 lg:grid-cols-3">
@@ -280,7 +280,7 @@ function Composer({ onPosted }) {
         value={body}
         onChange={(e) => setBody(e.target.value)}
       />
-      {error && <p className="mt-2 text-sm text-red-300">{error}</p>}
+      {error && <p className="mt-2 text-sm text-coral">{error}</p>}
       <div className="mt-3 flex justify-end">
         <button onClick={submit} disabled={!body.trim() || busy} className="btn-primary px-4 py-2 text-sm disabled:opacity-40">
           <Icon.send size={15} /> {busy ? 'Публикуване…' : 'Публикувай'}
@@ -323,13 +323,13 @@ function PostCard({ post, canLike, onChange }) {
           <Icon.cap size={16} />
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-white">{post.authorName || 'Университет'}</p>
-          <p className="text-[11px] text-slate-500">{fmtDate(post.createdAt)}</p>
+          <p className="truncate text-sm font-semibold text-forest-ink">{post.authorName || 'Университет'}</p>
+          <p className="text-[11px] text-forest/50">{fmtDate(post.createdAt)}</p>
         </div>
       </div>
 
-      {post.title && <h3 className="mt-3 font-display text-base font-bold text-white">{post.title}</h3>}
-      <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">{post.body}</p>
+      {post.title && <h3 className="mt-3 font-display text-base font-bold text-forest-ink">{post.title}</h3>}
+      <p className="mt-1.5 whitespace-pre-wrap text-sm leading-relaxed text-forest/70">{post.body}</p>
 
       <div className="mt-4 flex items-center gap-2">
         <button
@@ -338,14 +338,14 @@ function PostCard({ post, canLike, onChange }) {
           className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition-colors ${
             post.likedByMe
               ? 'bg-accent/15 text-accent-soft ring-1 ring-accent/30'
-              : 'bg-white/[0.05] text-slate-400 ring-1 ring-white/10'
-          } ${canLike ? 'hover:text-white' : 'cursor-default'}`}
+              : 'bg-forest/[0.06] text-forest/60 ring-1 ring-forest/10'
+          } ${canLike ? 'hover:text-forest-ink' : 'cursor-default'}`}
           aria-pressed={post.likedByMe}
           title={canLike ? '' : 'Само ученици могат да харесват'}
         >
           <Icon.heart size={14} className={post.likedByMe ? 'fill-current' : ''} /> {post.likeCount}
         </button>
-        {!canLike && <span className="text-[11px] text-slate-600">харесвания</span>}
+        {!canLike && <span className="text-[11px] text-forest/40">харесвания</span>}
       </div>
     </motion.div>
   );
@@ -360,20 +360,20 @@ function UniCard({ uni, delay }) {
       className="glass glass-hover flex flex-col overflow-hidden"
     >
       <div className={`relative h-28 bg-gradient-to-br ${uni.hue}`}>
-        <div className="absolute inset-0 grid place-items-center text-white/30">
+        <div className="absolute inset-0 grid place-items-center text-forest/25">
           <Icon.cap size={40} />
         </div>
-        <span className="absolute left-4 top-4 chip bg-black/30 backdrop-blur">
+        <span className="absolute left-4 top-4 chip bg-forest/80 text-white backdrop-blur">
           <Icon.pin size={12} /> {uni.city}
         </span>
       </div>
 
       <div className="flex flex-1 flex-col p-5">
-        <h3 className="font-display text-base font-bold leading-tight text-white">{uni.name}</h3>
-        <p className="mt-2 text-sm leading-relaxed text-slate-400">{uni.blurb}</p>
+        <h3 className="font-display text-base font-bold leading-tight text-forest-ink">{uni.name}</h3>
+        <p className="mt-2 text-sm leading-relaxed text-forest/70">{uni.blurb}</p>
 
         <div className="mt-4 space-y-2.5">
-          <div className="flex items-center gap-2 text-xs text-slate-400">
+          <div className="flex items-center gap-2 text-xs text-forest/70">
             <Icon.cap size={13} className="shrink-0 text-accent-soft" /> осн. {uni.founded}
           </div>
           <div className="flex flex-wrap gap-1.5">
@@ -381,28 +381,28 @@ function UniCard({ uni, delay }) {
               <span key={f} className="chip py-0.5 text-[11px]">{f}</span>
             ))}
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-300">
+          <div className="flex items-center gap-2 text-xs text-forest/70">
             <Icon.coin size={13} className="shrink-0 text-accent-soft" /> Такса: {uni.tuition}
           </div>
-          <div className="flex items-start gap-2 text-[11px] leading-relaxed text-slate-500">
+          <div className="flex items-start gap-2 text-[11px] leading-relaxed text-forest/50">
             <Icon.calc size={13} className="mt-0.5 shrink-0 text-accent-soft" />
-            <span><span className="font-semibold text-slate-400">Балообразуване: </span>{uni.balo}</span>
+            <span><span className="font-semibold text-forest/60">Балообразуване: </span>{uni.balo}</span>
           </div>
         </div>
 
-        <p className="mt-4 text-[11px] uppercase tracking-wider text-slate-500">Галерия</p>
+        <p className="mt-4 text-[11px] uppercase tracking-wider text-forest/50">Галерия</p>
         <div className="mt-2 flex flex-wrap gap-2">
           {uni.photos.map((p, i) => (
-            <span key={i} className="flex h-12 w-16 items-center justify-center rounded-lg bg-white/[0.05] text-center text-[10px] text-slate-400 ring-1 ring-white/10">
+            <span key={i} className="flex h-12 w-16 items-center justify-center rounded-lg bg-forest/[0.06] text-center text-[10px] text-forest/60 ring-1 ring-forest/10">
               {p}
             </span>
           ))}
         </div>
 
-        <p className="mt-4 text-[11px] uppercase tracking-wider text-slate-500">Постижения</p>
+        <p className="mt-4 text-[11px] uppercase tracking-wider text-forest/50">Постижения</p>
         <ul className="mt-2 space-y-1.5">
           {uni.achievements.map((a, i) => (
-            <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
+            <li key={i} className="flex items-start gap-2 text-sm text-forest/70">
               <span className="mt-0.5 text-accent-soft"><Icon.trophy size={13} /></span>
               <span>{a}</span>
             </li>

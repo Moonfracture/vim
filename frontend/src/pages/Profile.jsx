@@ -10,8 +10,8 @@ export default function Profile() {
   if (!user) {
     return (
       <div className="mx-auto max-w-md px-6 py-24 text-center">
-        <h1 className="font-display text-2xl font-bold text-white">Не си влязъл в профил</h1>
-        <p className="mt-3 text-slate-400">Влез или се регистрирай, за да видиш профила си.</p>
+        <h1 className="font-display text-2xl font-bold text-forest-ink">Не си влязъл в профил</h1>
+        <p className="mt-3 text-forest/70">Влез или се регистрирай, за да видиш профила си.</p>
         <button
           onClick={() => window.dispatchEvent(new CustomEvent('unikompas:open-auth'))}
           className="btn-primary mt-6 px-5 py-2.5 text-sm"
@@ -38,8 +38,8 @@ export default function Profile() {
             {user.name?.[0] || 'U'}
           </span>
           <div className="min-w-0">
-            <h1 className="truncate font-display text-2xl font-bold text-white">{user.name}</h1>
-            <p className="truncate text-sm text-slate-400">{user.email}</p>
+            <h1 className="truncate font-display text-2xl font-bold text-forest-ink">{user.name}</h1>
+            <p className="truncate text-sm text-forest/70">{user.email}</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
               <span className="chip border-accent/30 bg-accent/10 py-0.5 text-[11px] text-accent-soft">
                 {role?.label}
@@ -70,13 +70,13 @@ export default function Profile() {
           transition={{ duration: 0.5, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
           className="mt-6"
         >
-          <h2 className="flex items-center gap-2 font-display text-lg font-bold text-white">
+          <h2 className="flex items-center gap-2 font-display text-lg font-bold text-forest-ink">
             <Icon.heart size={18} className="text-accent-soft" /> Запазени университети
-            <span className="text-sm font-normal text-slate-500">({favorites.length})</span>
+            <span className="text-sm font-normal text-forest/50">({favorites.length})</span>
           </h2>
 
           {favorites.length === 0 ? (
-            <div className="glass mt-3 p-6 text-center text-sm text-slate-400">
+            <div className="glass mt-3 p-6 text-center text-sm text-forest/70">
               Още нямаш запазени университети. Намери своите в{' '}
               <Link to="/search" className="font-semibold text-accent-soft hover:underline">Търсене</Link>.
             </div>
@@ -88,12 +88,12 @@ export default function Profile() {
                     <Icon.cap size={16} />
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-semibold text-white">{f.name}</p>
-                    {f.country && <p className="truncate text-xs text-slate-500">{f.country}</p>}
+                    <p className="truncate text-sm font-semibold text-forest-ink">{f.name}</p>
+                    {f.country && <p className="truncate text-xs text-forest/50">{f.country}</p>}
                   </div>
                   <button
                     onClick={() => toggleFavorite({ key: f.key, name: f.name, country: f.country })}
-                    className="btn-ghost shrink-0 px-2.5 py-2 text-slate-400 hover:text-white"
+                    className="btn-ghost shrink-0 px-2.5 py-2 text-forest/60 hover:text-forest-ink"
                     aria-label="Премахни от запазени"
                   >
                     <Icon.close size={16} />
