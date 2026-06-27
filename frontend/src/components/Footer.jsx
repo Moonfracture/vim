@@ -37,7 +37,17 @@ export default function Footer() {
           </a>
         </div>
 
-        <p className="mt-6 text-xs text-forest/40">© {new Date().getFullYear()} УниКомпас · Хакатон проект „Избор на университет“</p>
+        <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-xs text-forest/40">© {new Date().getFullYear()} УниКомпас · Хакатон проект „Избор на университет“</p>
+          <a
+            href="https://openkbs.com"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-accent-soft hover:underline"
+          >
+            <Icon.globe size={13} /> Powered by OpenKBS
+          </a>
+        </div>
       </div>
     </footer>
   );
